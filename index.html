@@ -911,7 +911,7 @@ async function submitForm() {
   submitBtn.disabled = true;
 
   // Send to Supabase
-  const { error } = await db.from('Registration').insert([{
+  const { error } = await db.from('registrations').insert([{
     fullname:     reg.fullname,
     nickname:     reg.nickname,
     dob:          reg.dob,
@@ -1037,7 +1037,7 @@ async function renderAdminTable() {
   tbody.innerHTML = '<tr><td colspan="14" class="no-data">Loading...</td></tr>';
   count.textContent = 'Loading...';
 
-  const { data, error } = await db.from('Registration').select('*').order('created_at', { ascending: false });
+  const { data, error } = await db.from('registrations').select('*').order('created_at', { ascending: false });
 
   if (error) {
     tbody.innerHTML = `<tr><td colspan="14" class="no-data" style="color:var(--red)">Error: ${error.message}</td></tr>`;
@@ -1188,7 +1188,7 @@ function saveSettings() {
 
 // EXPORT CSV
 async function exportCSV() {
-  const { data, error } = await db.from('Registration').select('*').order('created_at', { ascending: false });
+  const { data, error } = await db.from('registrations').select('*').order('created_at', { ascending: false });
   if (error) { alert('Gagal mengambil data: ' + error.message); return; }
   if (!data || data.length === 0) { alert('No registrations to export.'); return; }
 
