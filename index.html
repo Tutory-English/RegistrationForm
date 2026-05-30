@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tutory English – Student Registration</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --blue: #1a56db;
@@ -613,6 +614,13 @@
 
 <script>
 // ============================================================
+// SUPABASE
+// ============================================================
+const SUPABASE_URL = 'https://nhsbgexkihuzptkrtzsi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_J9JeoMLphl_OLShvDtpF3g_GjCtju1e';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============================================================
 // DEFAULT CONFIG (overridden by localStorage)
 // ============================================================
 const DEFAULT_PASSWORDS = ['tutory2024', 'sheren2025'];
@@ -853,7 +861,7 @@ function handleUpload(input) {
 // ============================================================
 // SUBMIT
 // ============================================================
-function submitForm() {
+async function submitForm() {
   const proof = document.getElementById('proof-file').files[0];
   if (!proof) { document.getElementById('f-proof-err').style.display='block'; return; }
   document.getElementById('f-proof-err').style.display='none';
@@ -891,9 +899,46 @@ function submitForm() {
     save('tutory_used_codes', usedCodes);
   }
 
+  // Save to localStorage as backup
   registrations.push(reg);
   save('tutory_registrations', registrations);
   window._lastReg = reg;
+
+  // Disable submit button while saving
+  const submitBtn = document.querySelector('#page3 .btn-primary');
+  submitBtn.textContent = 'Submitting...';
+  submitBtn.disabled = true;
+
+  // Send to Supabase
+  const { error } = await supabase.from('Registration').insert([{
+    fullname:     reg.fullname,
+    nickname:     reg.nickname,
+    dob:          reg.dob,
+    gender:       reg.gender,
+    email:        reg.email,
+    phone:        reg.phone,
+    instagram:    reg.instagram,
+    occupation:   reg.occupation,
+    purpose:      reg.purpose,
+    target_band:  reg.targetBand,
+    source:       reg.source,
+    current_band: reg.currentBand,
+    weak_skill:   reg.weakSkill,
+    class_key:    reg.classKey,
+    class_name:   reg.className,
+    class_hours:  reg.classHours,
+    amount_paid:  reg.amountPaid,
+    member_code:  reg.memberCode,
+    notes:        reg.notes,
+  }]);
+
+  submitBtn.textContent = '✅ Submit Registration';
+  submitBtn.disabled = false;
+
+  if (error) {
+    console.error('Supabase error:', error);
+    alert('⚠️ Gagal menyimpan ke database. Data tersimpan lokal. Error: ' + error.message);
+  }
 
   document.getElementById('success-name').textContent = reg.fullname;
   document.getElementById('success-class').textContent = info.name;
