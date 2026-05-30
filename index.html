@@ -616,10 +616,19 @@
 // ============================================================
 // SUPABASE
 // ============================================================
-const SUPABASE_URL = 'https://nhsbgexkihuzptkrtzsi.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_J9JeoMLphl_OLShvDtpF3g_GjCtju1e';
 const { createClient } = window.supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Registration form database (form submissions)
+const db = createClient(
+  'https://nhsbgexkihuzptkrtzsi.supabase.co',
+  'sb_publishable_J9JeoMLphl_OLShvDtpF3g_GjCtju1e'
+);
+
+// Admin Management System database (private class system)
+const adminDb = createClient(
+  'https://rphyhxgqaalgtlurwxff.supabase.co',
+  'sb_publishable_SSNgz1JTwwunDLYWFv8R0g_u2qjGosd'
+);
 
 // ============================================================
 // DEFAULT CONFIG (overridden by localStorage)
@@ -910,7 +919,7 @@ async function submitForm() {
   submitBtn.textContent = 'Submitting...';
   submitBtn.disabled = true;
 
-  // Send to Supabase
+  // 1. Send to registration form database
   const { error } = await db.from('registrations').insert([{
     fullname:     reg.fullname,
     nickname:     reg.nickname,
@@ -939,6 +948,59 @@ async function submitForm() {
   if (error) {
     console.error('Supabase error:', error);
     alert('⚠️ Gagal menyimpan ke database. Data tersimpan lokal. Error: ' + error.message);
+  }
+
+  // 2. Also send to Admin Management System (students table)
+  const classTypeMap = { private: 'Private', semiprivate: 'Semi private', group: 'Group class', wns: 'Group class', grammar: 'Group class', bundle: 'Group class' };
+  const adminClassType = classTypeMap[reg.classKey] || 'Private';
+
+  // Get next student number from admin db
+  const { data: existingStudents } = await adminDb.from('students').select('id, data').order('id');
+  const numbers = (existingStudents || [])
+    .map(s => ((s.data || {}).studentNumber || ''))
+    .map(sn => { const m = sn.match(/(\d+)\s*$/); return m ? parseInt(m[1]) : 0; })
+    .filter(n => n > 0);
+  const nextNum = (numbers.length ? Math.max(...numbers) : 0) + 1;
+  const prefixMap = { 'Private': 'PVT', 'Semi private': 'SPVT', 'Group class': 'GC' };
+  const studentNumber = `${prefixMap[adminClassType] || 'REG'}-${new Date().getFullYear()}-${String(nextNum).padStart(3,'0')}`;
+
+  const adminStudentData = {
+    name:          reg.fullname,
+    wa:            reg.phone,
+    dateChat:      new Date().toISOString().slice(0, 10),
+    status:        'hot prospect',
+    studentNumber: studentNumber,
+    classType:     adminClassType,
+    programDetail: reg.className,
+    teacher:       '',
+    classStatus:   '',
+    start:         '',
+    end:           '',
+    paymentType:   'Full payment',
+    payment:       'pending',
+    amount:        'Rp ' + Number(reg.amountPaid).toLocaleString('id-ID'),
+    notes:         `[Via Registration Form] ${reg.notes || ''}\nEmail: ${reg.email}\nIG: ${reg.instagram || '-'}\nCurrent Band: ${reg.currentBand} | Target: ${reg.targetBand}\nPurpose: ${reg.purpose}`,
+    classNotes:    '',
+    placementTest: '', placementTestScore: '',
+    postTest1: '', postTest1Score: '',
+    postTest2: '', postTest2Score: '',
+    postTest3: '', postTest3Score: '',
+    report: '', reenroll: '', paymentProof: '',
+    memberCode:    reg.memberCode || '',
+    source:        reg.source || '',
+    occupation:    reg.occupation || '',
+  };
+
+  const adminId = 's_reg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  const { error: adminError } = await adminDb.from('students').insert([{
+    id: adminId,
+    data: adminStudentData,
+    updated_at: new Date().toISOString(),
+  }]);
+
+  if (adminError) {
+    console.error('Admin DB error:', adminError);
+    // Don't alert user — registration still succeeded
   }
 
   document.getElementById('success-name').textContent = reg.fullname;
