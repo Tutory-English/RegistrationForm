@@ -618,7 +618,8 @@
 // ============================================================
 const SUPABASE_URL = 'https://nhsbgexkihuzptkrtzsi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J9JeoMLphl_OLShvDtpF3g_GjCtju1e';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ============================================================
 // DEFAULT CONFIG (overridden by localStorage)
@@ -910,7 +911,7 @@ async function submitForm() {
   submitBtn.disabled = true;
 
   // Send to Supabase
-  const { error } = await supabase.from('Registration').insert([{
+  const { error } = await db.from('Registration').insert([{
     fullname:     reg.fullname,
     nickname:     reg.nickname,
     dob:          reg.dob,
