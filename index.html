@@ -1031,28 +1031,43 @@ function switchTab(tab) {
 }
 
 // REGISTRATIONS TABLE
-function renderAdminTable() {
+async function renderAdminTable() {
   const tbody = document.getElementById('reg-tbody');
-  document.getElementById('reg-count').textContent = registrations.length + ' registration(s)';
-  if (registrations.length === 0) {
+  const count = document.getElementById('reg-count');
+  tbody.innerHTML = '<tr><td colspan="14" class="no-data">Loading...</td></tr>';
+  count.textContent = 'Loading...';
+
+  const { data, error } = await db.from('Registration').select('*').order('created_at', { ascending: false });
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="14" class="no-data" style="color:var(--red)">Error: ${error.message}</td></tr>`;
+    count.textContent = 'Error loading data';
+    return;
+  }
+
+  count.textContent = (data.length) + ' registration(s)';
+  window._supabaseData = data;
+
+  if (data.length === 0) {
     tbody.innerHTML = '<tr><td colspan="14" class="no-data">No registrations yet</td></tr>';
     return;
   }
-  tbody.innerHTML = registrations.map((r,i) => `
+
+  tbody.innerHTML = data.map((r,i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="white-space:nowrap">${r.date}</td>
-      <td><strong>${r.fullname}</strong>${r.nickname ? '<br><span style="color:var(--gray);font-size:.75rem;">'+r.nickname+'</span>' : ''}</td>
-      <td>${r.phone}</td>
-      <td>${r.email}</td>
-      <td>${r.className}<br><span style="color:var(--gray);font-size:.75rem">${r.classHours}</span></td>
-      <td style="white-space:nowrap;color:var(--blue);font-weight:700">IDR ${fmt(r.amountPaid)}</td>
-      <td>${r.currentBand}</td>
-      <td>${r.targetBand}</td>
-      <td>${r.occupation}</td>
-      <td>${r.purpose}</td>
+      <td style="white-space:nowrap">${new Date(r.created_at).toLocaleString('id-ID')}</td>
+      <td><strong>${r.fullname||''}</strong>${r.nickname ? '<br><span style="color:var(--gray);font-size:.75rem;">'+r.nickname+'</span>' : ''}</td>
+      <td>${r.phone||''}</td>
+      <td>${r.email||''}</td>
+      <td>${r.class_name||''}<br><span style="color:var(--gray);font-size:.75rem">${r.class_hours||''}</span></td>
+      <td style="white-space:nowrap;color:var(--blue);font-weight:700">IDR ${fmt(r.amount_paid||0)}</td>
+      <td>${r.current_band||''}</td>
+      <td>${r.target_band||''}</td>
+      <td>${r.occupation||''}</td>
+      <td>${r.purpose||''}</td>
       <td>${r.source||'–'}</td>
-      <td style="font-family:monospace;font-size:.75rem">${r.memberCode||'–'}</td>
+      <td style="font-family:monospace;font-size:.75rem">${r.member_code||'–'}</td>
       <td>${r.notes||'–'}</td>
     </tr>`).join('');
 }
@@ -1172,15 +1187,21 @@ function saveSettings() {
 }
 
 // EXPORT CSV
-function exportCSV() {
-  if (registrations.length === 0) { alert('No registrations to export.'); return; }
+async function exportCSV() {
+  const { data, error } = await db.from('Registration').select('*').order('created_at', { ascending: false });
+  if (error) { alert('Gagal mengambil data: ' + error.message); return; }
+  if (!data || data.length === 0) { alert('No registrations to export.'); return; }
+
   const headers = ['#','Date','Full Name','Nickname','DOB','Gender','Email','Phone','Instagram','Occupation','Purpose','Target Band','Source','Current Level','Weak Skill','Class','Hours','Amount (IDR)','Member Code','Notes'];
-  const rows = registrations.map((r,i) => [
-    i+1, r.date, r.fullname, r.nickname, r.dob, r.gender,
+  const rows = data.map((r,i) => [
+    i+1,
+    new Date(r.created_at).toLocaleString('id-ID'),
+    r.fullname, r.nickname, r.dob, r.gender,
     r.email, r.phone, r.instagram, r.occupation, r.purpose,
-    r.targetBand, r.source, r.currentBand, r.weakSkill,
-    r.className, r.classHours, r.amountPaid, r.memberCode, r.notes
+    r.target_band, r.source, r.current_band, r.weak_skill,
+    r.class_name, r.class_hours, r.amount_paid, r.member_code, r.notes
   ].map(v => '"'+String(v||'').replace(/"/g,'""')+'"').join(','));
+
   const csv = [headers.join(','), ...rows].join('\n');
   const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
