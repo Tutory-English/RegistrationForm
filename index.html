@@ -505,7 +505,7 @@
   <div class="admin-panel" id="admin-panel">
     <div class="admin-header">
       <h3>📊 Admin Panel – Tutory English</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <div id="admin-action-btns" style="display:none;gap:8px;flex-wrap:wrap;">
         <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
         <button class="btn-danger" onclick="clearAllData()">🗑 Clear Data</button>
       </div>
@@ -616,24 +616,27 @@
 // ============================================================
 // SUPABASE
 // ============================================================
-const { createClient } = window.supabase;
-
-// Registration form database (form submissions)
-const db = createClient(
-  'https://nhsbgexkihuzptkrtzsi.supabase.co',
-  'sb_publishable_J9JeoMLphl_OLShvDtpF3g_GjCtju1e'
-);
-
-// Admin Management System database (private class system)
-const adminDb = createClient(
-  'https://rphyhxgqaalgtlurwxff.supabase.co',
-  'sb_publishable_SSNgz1JTwwunDLYWFv8R0g_u2qjGosd'
-);
+let db, adminDb;
+try {
+  const { createClient } = supabase;
+  // Registration form database (form submissions)
+  db = createClient(
+    'https://nhsbgexkihuzptkrtzsi.supabase.co',
+    'sb_publishable_J9JeoMLphl_OLShvDtpF3g_GjCtju1e'
+  );
+  // Admin Management System database (private class system)
+  adminDb = createClient(
+    'https://rphyhxgqaalgtlurwxff.supabase.co',
+    'sb_publishable_SSNgz1JTwwunDLYWFv8R0g_u2qjGosd'
+  );
+} catch(e) {
+  console.error('Supabase init failed:', e);
+}
 
 // ============================================================
 // DEFAULT CONFIG (overridden by localStorage)
 // ============================================================
-const DEFAULT_PASSWORDS = ['tutory2024', 'sheren2025'];
+const DEFAULT_PASSWORDS = ['TTR202411'];
 const DEFAULT_WA = '6287762013051';
 const MEMBER_CODES_DEFAULT = [
   'TUTORY-M001','TUTORY-M002','TUTORY-M003','TUTORY-M004','TUTORY-M005',
@@ -660,7 +663,9 @@ const DEFAULT_CLASSES = [
 function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
 function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
 
-let adminPasswords = load('tutory_passwords', DEFAULT_PASSWORDS);
+// Always use DEFAULT_PASSWORDS as base — localStorage additions are additive
+const storedPasswords = load('tutory_passwords', []);
+let adminPasswords = [...new Set([...DEFAULT_PASSWORDS, ...storedPasswords])];
 let waNumber       = load('tutory_wa', DEFAULT_WA);
 let classes        = load('tutory_classes', DEFAULT_CLASSES);
 let registrations  = load('tutory_registrations', []);
@@ -1065,6 +1070,13 @@ let adminOpen = false;
 function toggleAdmin() {
   adminOpen = !adminOpen;
   document.getElementById('admin-panel').classList.toggle('visible', adminOpen);
+  if (!adminOpen) {
+    // Reset to password gate when closed
+    document.getElementById('admin-pw-section').style.display = 'block';
+    document.getElementById('admin-data-section').style.display = 'none';
+    document.getElementById('admin-action-btns').style.display = 'none';
+    document.getElementById('admin-pw-input').value = '';
+  }
 }
 
 function checkAdminPw() {
@@ -1072,6 +1084,7 @@ function checkAdminPw() {
   if (adminPasswords.includes(pw)) {
     document.getElementById('admin-pw-section').style.display = 'none';
     document.getElementById('admin-data-section').style.display = 'block';
+    document.getElementById('admin-action-btns').style.display = 'flex';
     renderAdminTable();
     renderClassEditor();
     renderCodes();
