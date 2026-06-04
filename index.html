@@ -667,7 +667,7 @@ function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); 
 const storedPasswords = load('tutory_passwords', []);
 let adminPasswords = [...new Set([...DEFAULT_PASSWORDS, ...storedPasswords])];
 let waNumber       = load('tutory_wa', DEFAULT_WA);
-let classes        = load('tutory_classes', DEFAULT_CLASSES);
+let classes        = DEFAULT_CLASSES;
 let registrations  = load('tutory_registrations', []);
 let memberCodes    = load('tutory_member_codes', MEMBER_CODES_DEFAULT);
 let usedCodes      = load('tutory_used_codes', []);
@@ -682,11 +682,68 @@ let memberCodeApplied = false;
 let currentPrice = 0;
 let appliedCode = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadClassesFromSupabase();
   renderClassCards();
   loadQRIS();
   loadWASettings();
 });
+
+
+// ============================================================
+// GLOBAL CLASS DATA (SUPABASE)
+// ============================================================
+function mapDbClassToUi(c) {
+  return {
+    key: c.key,
+    name: c.class_name,
+    hours: `${c.hours} Hours`,
+    normalPrice: Number(c.normal_price) || 0,
+    price: Number(c.promo_price) || 0,
+    type: c.class_type,
+    memberPrice: c.member_price === null || c.member_price === undefined ? null : Number(c.member_price),
+    active: c.is_active !== false
+  };
+}
+
+function mapUiClassToDb(c) {
+  return {
+    key: c.key,
+    class_name: c.name,
+    class_type: c.type,
+    hours: parseInt(String(c.hours).replace(/\D/g, ''), 10) || 0,
+    normal_price: Number(c.normalPrice) || 0,
+    promo_price: Number(c.price) || 0,
+    member_price: c.type === 'group' ? (Number(c.memberPrice) || null) : null,
+    is_active: c.active !== false
+  };
+}
+
+async function loadClassesFromSupabase() {
+  if (!adminDb) {
+    console.warn('adminDb is not ready. Using default classes.');
+    classes = DEFAULT_CLASSES;
+    return;
+  }
+
+  const { data, error } = await adminDb
+    .from('classes')
+    .select('key,class_name,class_type,hours,normal_price,promo_price,member_price,is_active')
+    .order('id', { ascending: true });
+
+  if (error) {
+    console.error('Failed to load classes from Supabase:', error);
+    classes = DEFAULT_CLASSES;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    classes = DEFAULT_CLASSES;
+    return;
+  }
+
+  classes = data.map(mapDbClassToUi);
+}
 
 // ============================================================
 // CLASS CARDS RENDER
@@ -1174,21 +1231,46 @@ function toggleClassActive(i) {
   classes[i].active = document.getElementById('ce-active-'+i).checked;
 }
 
-function saveClassEdits() {
+async function saveClassEdits() {
   classes.forEach((c, i) => {
-    c.name         = document.getElementById('ce-name-'+i).value;
-    c.hours        = document.getElementById('ce-hours-'+i).value;
-    c.normalPrice  = parseInt(document.getElementById('ce-normal-'+i).value) || c.normalPrice;
-    c.price        = parseInt(document.getElementById('ce-promo-'+i).value) || c.price;
+    c.name         = document.getElementById('ce-name-'+i).value.trim();
+    c.hours        = document.getElementById('ce-hours-'+i).value.trim();
+    c.normalPrice  = parseInt(document.getElementById('ce-normal-'+i).value, 10) || 0;
+    c.price        = parseInt(document.getElementById('ce-promo-'+i).value, 10) || 0;
+
     if (c.type === 'group') {
-      const mp = parseInt(document.getElementById('ce-member-'+i).value);
-      c.memberPrice = mp || c.memberPrice;
+      const mp = parseInt(document.getElementById('ce-member-'+i).value, 10);
+      c.memberPrice = mp || null;
+    } else {
+      c.memberPrice = null;
     }
+
     c.active = document.getElementById('ce-active-'+i).checked;
   });
-  save('tutory_classes', classes);
+
+  if (!adminDb) {
+    alert('Supabase connection is not ready. Please refresh and try again.');
+    return;
+  }
+
+  const payload = classes.map(mapUiClassToDb);
+
+  const { error } = await adminDb
+    .from('classes')
+    .upsert(payload, { onConflict: 'key' });
+
+  if (error) {
+    console.error('Failed to save classes to Supabase:', error);
+    alert('Failed to save classes: ' + error.message);
+    return;
+  }
+
+  await loadClassesFromSupabase();
   renderClassCards();
+  renderClassEditor();
+
   const msg = document.getElementById('class-save-msg');
+  msg.textContent = 'Class prices saved globally.';
   msg.style.display = 'block';
   setTimeout(() => msg.style.display='none', 3000);
 }
