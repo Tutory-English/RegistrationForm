@@ -445,8 +445,8 @@
         <div style="background:#f8faff;border:1.5px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;">
           <div style="font-weight:700;font-size:.88rem;margin-bottom:10px;">🏦 Or Bank Transfer</div>
           <div style="font-size:.88rem;line-height:2;">
-            <strong>BCA</strong> – 8670059902<br>
-            a/n <strong>El Sheren Elieswati</strong><br>
+            <strong>Mandiri</strong> – 1550055576550<br>
+            a/n <strong>LENTERA INDONESIA GROUP</strong><br>
             <span style="font-size:.78rem;color:var(--gray);">Transfer description: your full name</span>
           </div>
         </div>
@@ -469,6 +469,26 @@
         <div class="field">
           <label>Notes / Questions (optional)</label>
           <textarea id="notes" placeholder="Any questions or notes for the Tutory team..."></textarea>
+        </div>
+
+        <!-- REFUND POLICY AGREEMENT -->
+        <div class="field" id="f-refund-agree">
+          <div style="border:1.5px solid var(--border);border-radius:10px;padding:16px;background:#f8faff;">
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:8px;">📄 Refund Policy Agreement</div>
+            <div style="font-size:.8rem;color:var(--gray);margin-bottom:10px;">Please read the policy carefully before confirming your registration.</div>
+            <ol style="font-size:.82rem;color:var(--text);line-height:1.7;padding-left:18px;margin-bottom:12px;">
+              <li>Payments that have been completed cannot be refunded if the participant cancels the class.</li>
+              <li>If cancellation happens due to participant error (for example: wrong schedule selection), the refund amount will be 80% of the total payment.</li>
+              <li>If cancellation occurs due to management error from Tutory English, the refund will be 100% of the payment.</li>
+              <li>The refund process will take up to 5 working days after the request is approved.</li>
+              <li>Classes that have been taken are non-transferable and cannot be rescheduled to another program or time by the student.</li>
+            </ol>
+            <label style="display:flex;align-items:flex-start;gap:8px;font-size:.85rem;cursor:pointer;">
+              <input type="checkbox" id="refund-agree-checkbox" style="margin-top:3px;flex-shrink:0;">
+              <span>I have read and agree to the Refund Policy above. <span class="req">*</span></span>
+            </label>
+          </div>
+          <div class="field-error" id="f-refund-agree-err" style="display:none">Please agree to the Refund Policy to continue</div>
         </div>
 
         <div class="btn-row" style="flex-direction:column;">
@@ -651,10 +671,10 @@ const DEFAULT_CLASSES = [
   { key: 'basic',       name: '⭐ Basic Coaching',              hours: '10 Hours', normalPrice: 3899000,  price: 1899000, type: 'private',     memberPrice: null, active: true },
   { key: 'intensive',   name: '⭐ Intensive Coaching',          hours: '20 Hours', normalPrice: 7999000,  price: 3199000, type: 'private',     memberPrice: null, active: true },
   { key: 'elite',       name: '⭐ ELITE Coaching',              hours: '40 Hours', normalPrice: 11699000, price: 5899000, type: 'private',     memberPrice: null, active: true },
-  { key: 'semiprivate', name: '⭐ Semi Private',                hours: '20 Hours', normalPrice: 1129000,  price: 935000,  type: 'semiprivate', memberPrice: null, active: true },
-  { key: 'wns',         name: 'Writing & Speaking Class',      hours: '15 Hours', normalPrice: 799000,   price: 489000,  type: 'group',       memberPrice: 439000, active: true },
-  { key: 'grammar',     name: 'Grammar Group Class',           hours: '10 Hours', normalPrice: 499000,   price: 279000,  type: 'group',       memberPrice: 229000, active: true },
-  { key: 'bundle',      name: 'Bundle Writing + Speaking + Grammar', hours: '25 Hours', normalPrice: 1298000, price: 749000, type: 'group', memberPrice: 649000, active: true },
+  { key: 'semiprivate', name: '⭐ Semi Private',                hours: '20 Hours', normalPrice: 945000,   price: 899000,  type: 'semiprivate', memberPrice: 879000, active: true },
+  { key: 'wns',         name: 'Writing & Speaking Class',      hours: '15 Hours', normalPrice: 489000,   price: 459000,  type: 'group',       memberPrice: 439000, active: true },
+  { key: 'grammar',     name: 'Grammar Group Class',           hours: '10 Hours', normalPrice: 279000,   price: 239000,  type: 'group',       memberPrice: 229000, active: true },
+  { key: 'bundle',      name: 'Bundle Writing + Speaking + Grammar', hours: '25 Hours', normalPrice: 749000,  price: 699000,  type: 'group',       memberPrice: 649000, active: true },
 ];
 
 // ============================================================
@@ -720,11 +740,12 @@ function renderClassCards() {
     grid.innerHTML = '';
     classes.filter(c => c.type === type && c.active).forEach(c => {
       const isGroup = c.type === 'group';
+      const promoPct = (c.normalPrice > c.price) ? Math.round((c.normalPrice - c.price) / c.normalPrice * 100) : 0;
       grid.innerHTML += `
         <label class="class-card" id="cc-${c.key}">
           <input type="radio" name="classChoice" value="${c.key}" onchange="selectClass(this)">
           <div class="check-icon">✓</div>
-          <div class="class-name">${c.name} <span class="badge badge-type">${c.type === 'semiprivate' ? 'Semi Private' : c.type === 'group' ? 'Group' : 'Private'}</span></div>
+          <div class="class-name">${c.name} <span class="badge badge-type">${c.type === 'semiprivate' ? 'Semi Private' : c.type === 'group' ? 'Group' : 'Private'}</span>${c.type === 'private' && promoPct > 0 ? ` <span class="badge" style="background:#fee2e2;color:#dc2626;">Promo ${promoPct}%</span>` : ''}</div>
           <div class="class-meta">${c.hours}${isGroup ? ' · Up to 15 students' : ''}</div>
           <div class="class-price">
             <div class="price-normal">IDR ${fmt(c.normalPrice)}</div>
@@ -902,6 +923,14 @@ async function submitForm() {
   const proof = document.getElementById('proof-file').files[0];
   if (!proof) { document.getElementById('f-proof-err').style.display='block'; return; }
   document.getElementById('f-proof-err').style.display='none';
+
+  const agreed = document.getElementById('refund-agree-checkbox').checked;
+  if (!agreed) {
+    document.getElementById('f-refund-agree-err').style.display='block';
+    document.getElementById('f-refund-agree-err').scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  document.getElementById('f-refund-agree-err').style.display='none';
 
   const info = classes.find(c => c.key === selectedClass);
   const occVal = document.getElementById('occupation').value;
