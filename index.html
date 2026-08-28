@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tutory English – Student Registration</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --blue: #1a56db;
@@ -48,6 +49,7 @@
   .field label { display: block; font-size: .85rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
   .field label .req { color: var(--red); margin-left: 2px; }
   .field input, .field select, .field textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: .95rem; color: var(--text); background: white; transition: border .2s; appearance: none; }
+  .field input[type=checkbox] { width: 17px; height: 17px; min-width: 17px; padding: 0; border-radius: 4px; appearance: auto; -webkit-appearance: auto; background: white; flex-shrink: 0; }
   .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
   .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 18px; padding-right: 36px; }
   .field textarea { resize: vertical; min-height: 80px; }
@@ -71,6 +73,19 @@
   .price-promo { font-size: 1.1rem; font-weight: 700; color: var(--blue); }
   .badge { display: inline-block; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
   .badge-type { background: var(--blue-light); color: var(--blue); }
+
+  /* Category picker cards */
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .cat-card { border: 2px solid var(--border); border-radius: 12px; padding: 18px 14px; cursor: pointer; transition: all .2s; text-align: center; background: white; }
+  .cat-card:hover { border-color: var(--blue); background: var(--blue-light); }
+  .cat-card.active { border-color: var(--blue); background: var(--blue-light); }
+  .cat-icon { font-size: 1.8rem; margin-bottom: 8px; }
+  .cat-name { font-weight: 700; font-size: .88rem; color: var(--text); line-height: 1.3; }
+  .cat-sub { font-size: .73rem; color: var(--gray); margin-top: 4px; }
+  .cat-back-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--blue); font-size: .85rem; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 14px; }
+  .cat-back-btn:hover { text-decoration: underline; }
+  .selected-cat-label { font-weight: 700; font-size: .95rem; color: var(--text); margin-bottom: 14px; }
+
   .benefit-panel { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: .81rem; color: var(--text); animation: fadeDown .2s ease; }
   .benefit-title { font-weight: 700; font-size: .82rem; color: var(--blue); margin-bottom: 6px; }
   .benefit-desc { color: var(--gray); margin-bottom: 8px; line-height: 1.5; }
@@ -381,19 +396,108 @@
           <div class="field-error">Please select your weakest skill</div>
         </div>
 
-        <div class="section-label">🎯 Select Your Class</div>
-        <div class="info-banner">⭐ = Band Guarantee class. Students at Band 4.0–5.5 eligible for +0.5 to +1.0 improvement. Band 6.0+ eligible for +0.5 improvement.</div>
+        <div class="section-label">🎯 Pilih Program</div>
 
-        <div style="font-weight:700;font-size:.9rem;margin-bottom:10px;color:#374151;">Private Class</div>
-        <div class="class-grid" id="class-grid-private"></div>
+        <!-- PHASE 1: CATEGORY PICKER -->
+        <div id="category-picker">
+          <p style="font-size:.85rem;color:var(--gray);margin-bottom:14px;">Pilih kategori program yang sesuai dengan tujuanmu:</p>
+          <div class="cat-grid">
+            <div class="cat-card" onclick="selectCategory('ielts_prep')">
+              <div class="cat-icon">📚</div>
+              <div class="cat-name">IELTS Preparation</div>
+              <div class="cat-sub">Private & Group Class</div>
+            </div>
+            <div class="cat-card" onclick="selectCategory('scholarship_prep')">
+              <div class="cat-icon">🎓</div>
+              <div class="cat-name">IELTS + Scholarship Prep</div>
+              <div class="cat-sub">Chevening & Non-Chevening</div>
+            </div>
+            <div class="cat-card" onclick="selectCategory('general_english')">
+              <div class="cat-icon">🗣️</div>
+              <div class="cat-name">General English</div>
+              <div class="cat-sub">Private Class</div>
+            </div>
+            <div class="cat-card" onclick="selectCategory('idp_package')">
+              <div class="cat-icon">📋</div>
+              <div class="cat-name">Prep + Official Test</div>
+              <div class="cat-sub">With IDP IELTS</div>
+            </div>
+            <div class="cat-card" onclick="selectCategory('essay_interview')">
+              <div class="cat-icon">✍️</div>
+              <div class="cat-name">Essay & Interview Prep</div>
+              <div class="cat-sub">Scholarship Mentoring</div>
+            </div>
+          </div>
+        </div>
 
-        <div style="font-weight:700;font-size:.9rem;margin:16px 0 10px;color:#374151;">Semi Private Class</div>
-        <div class="class-grid" id="class-grid-semiprivate"></div>
+        <!-- PHASE 2: CLASS LIST (hidden until category selected) -->
+        <div id="class-picker" style="display:none;">
+          <button class="cat-back-btn" onclick="resetCategory()">← Ganti Kategori</button>
+          <div class="selected-cat-label" id="selected-cat-label"></div>
 
-        <div style="font-weight:700;font-size:.9rem;margin:16px 0 10px;color:#374151;">Group Class <span style="font-size:.75rem;font-weight:400;color:var(--gray)">(member discount available)</span></div>
-        <div class="class-grid" id="class-grid-group"></div>
+          <div class="info-banner" id="band-guarantee-banner" style="display:none;">⭐ = Band Guarantee class. Students at Band 4.0–5.5 eligible for +0.5 to +1.0 improvement. Band 6.0+ eligible for +0.5 improvement.</div>
+
+          <!-- IELTS Preparation -->
+          <div id="section-ielts" style="display:none;">
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:10px;color:#374151;">Private Class</div>
+            <div class="class-grid" id="class-grid-ielts-private"></div>
+            <div style="font-weight:700;font-size:.9rem;margin:16px 0 10px;color:#374151;">Group Class <span style="font-size:.75rem;font-weight:400;color:var(--gray)">(includes Semi Private · member discount available)</span></div>
+            <div class="class-grid" id="class-grid-ielts-group"></div>
+          </div>
+
+          <!-- Scholarship Prep -->
+          <div id="section-scholarship" style="display:none;">
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:10px;color:#374151;">Program Chevening</div>
+            <div class="class-grid" id="class-grid-scholarship-chevening"></div>
+            <div style="font-weight:700;font-size:.9rem;margin:16px 0 10px;color:#374151;">Program Non-Chevening</div>
+            <div class="class-grid" id="class-grid-scholarship-nc"></div>
+          </div>
+
+          <!-- General English -->
+          <div id="section-general" style="display:none;">
+            <div class="class-grid" id="class-grid-general"></div>
+          </div>
+
+          <!-- IDP Package -->
+          <div id="section-idp" style="display:none;">
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:10px;color:#374151;">📋 Preparation Class + Official Test Package <span style="font-size:.75rem;font-weight:400;color:var(--gray)">(in collaboration with IDP IELTS)</span></div>
+            <div class="class-grid" id="class-grid-idp"></div>
+          </div>
+
+          <!-- Essay & Interview Prep -->
+          <div id="section-essay" style="display:none;">
+            <p style="font-size:.83rem;color:var(--gray);margin-bottom:14px;">Personalized one-on-one mentoring to strengthen your scholarship application — essay feedback, personal statement review, and mock interview practice.</p>
+            <div class="class-grid" id="class-grid-essay"></div>
+          </div>
+        </div>
 
         <div class="field-error" id="f-class-err" style="display:none;font-size:.85rem;margin-top:12px;">Please select a class to continue</div>
+
+        <!-- IDP-ONLY DOCUMENTS -->
+        <div id="idp-docs-section" style="display:none;margin-top:16px;border:1.5px solid var(--border);border-radius:10px;padding:16px;background:#f8faff;">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:4px;">🪪 Required for IDP Application</div>
+          <div style="font-size:.8rem;color:var(--gray);margin-bottom:14px;">Since this package includes official IELTS test registration via IDP, we need your ID and photo for the application.</div>
+
+          <div class="field" id="f-ktp-number">
+            <label>KTP Number (NIK) <span class="req">*</span></label>
+            <input type="text" id="ktp-number" placeholder="e.g. 3201234567890001" inputmode="numeric">
+            <div class="field-error">Please enter your KTP number</div>
+          </div>
+
+          <div class="field" id="f-passport-photo">
+            <label>Pass Photo (Formal Photo) <span class="req">*</span></label>
+            <div class="upload-area">
+              <input type="file" id="passport-photo-file" accept="image/*" onchange="handlePassportPhotoUpload(this)">
+              <div class="upload-icon">🖼️</div>
+              <div class="upload-text"><strong>Click to upload</strong> or drag & drop<br>JPG or PNG · max 5MB</div>
+              <div class="upload-preview" id="passport-photo-preview">
+                <img id="passport-photo-preview-img" src="" alt="Preview">
+                <div id="passport-photo-preview-name" style="font-size:.8rem;color:var(--gray);margin-top:6px;"></div>
+              </div>
+            </div>
+            <div class="field-error" id="f-passport-photo-err" style="display:none">Please upload your pass photo</div>
+          </div>
+        </div>
 
         <div class="btn-row">
           <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
@@ -434,8 +538,18 @@
           <div class="code-msg" id="code-msg"></div>
         </div>
 
-        <!-- QRIS -->
-        <div class="qris-box">
+        <!-- PROMO CODE (private class only) -->
+        <div class="member-box" id="promo-code-box" style="display:none;">
+          <div class="member-box-title">🎟️ Kode Promo (Private Class)</div>
+          <div class="code-row">
+            <input type="text" id="promo-code-input" placeholder="Masukkan kode promo" style="text-transform:uppercase">
+            <button class="btn-apply" onclick="applyPromoCode()">Pakai</button>
+          </div>
+          <div class="code-msg" id="promo-msg"></div>
+        </div>
+
+        <!-- QRIS (hidden) -->
+        <div class="qris-box" style="display:none;">
           <div class="qris-label">📱 Scan QRIS to Pay</div>
           <div class="qris-img-wrap" id="qris-display">
             <div id="qris-placeholder" style="padding:16px;text-align:center;color:var(--gray);font-size:.82rem;display:none;">
@@ -448,13 +562,13 @@
         </div>
 
         <!-- BANK -->
-        <div style="background:#f8faff;border:1.5px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;">
-          <div style="font-weight:700;font-size:.88rem;margin-bottom:10px;">🏦 Or Bank Transfer</div>
-          <div style="font-size:.88rem;line-height:2;">
+        <div style="background:#f0f6ff;border:2px solid var(--blue);border-radius:12px;padding:20px;margin-bottom:20px;">
+          <div style="font-weight:700;font-size:.95rem;margin-bottom:12px;color:var(--blue);">🏦 Bank Transfer</div>
+          <div style="font-size:.9rem;line-height:2.1;">
             <strong>Mandiri</strong> – 1550055576550<br>
-            a/n <strong>LENTERA INDONESIA GROUP</strong><br>
-            <span style="font-size:.78rem;color:var(--gray);">Transfer description: your full name</span>
+            a/n <strong>LENTERA INDONESIA GROUP</strong>
           </div>
+          <div style="font-size:.78rem;color:var(--gray);margin-top:6px;">Keterangan transfer: nama lengkap kamu</div>
         </div>
 
         <!-- UPLOAD -->
@@ -489,9 +603,9 @@
               <li>The refund process will take up to 5 working days after the request is approved.</li>
               <li>Classes that have been taken are non-transferable and cannot be rescheduled to another program or time by the student.</li>
             </ol>
-            <label style="display:flex;align-items:flex-start;gap:8px;font-size:.85rem;cursor:pointer;">
-              <input type="checkbox" id="refund-agree-checkbox" style="margin-top:3px;flex-shrink:0;">
-              <span>I have read and agree to the Refund Policy above. <span class="req">*</span></span>
+            <label style="display:flex;align-items:flex-start;gap:12px;font-size:.85rem;cursor:pointer;padding:8px 0;">
+              <input type="checkbox" id="refund-agree-checkbox" style="width:20px;height:20px;min-width:20px;flex-shrink:0;cursor:pointer;margin-top:1px;">
+              <span style="flex:1;line-height:1.5;">I have read and agree to the Refund Policy above. <span class="req">*</span></span>
             </label>
           </div>
           <div class="field-error" id="f-refund-agree-err" style="display:none">Please agree to the Refund Policy to continue</div>
@@ -533,6 +647,7 @@
       <h3>📊 Admin Panel – Tutory English</h3>
       <div id="admin-action-btns" style="display:none;gap:8px;flex-wrap:wrap;">
         <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn-export" onclick="exportXLSX()">⬇ Export Excel (.xlsx)</button>
         <button class="btn-danger" onclick="clearAllData()">🗑 Clear Data</button>
       </div>
     </div>
@@ -660,6 +775,27 @@ try {
 }
 
 // ============================================================
+// GOOGLE SHEET LIVE SYNC (mirror copy of every registration)
+// ============================================================
+// Paste your deployed Google Apps Script Web App URL here (ends in /exec).
+// Leave as '' to skip Google Sheet sync entirely — Supabase still works either way.
+const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyn48PsPyol_IYe3WHYBUuWvpVjTq4VtX_C2nIWZqBSJ7_MJHZkUbrDtbKYyBgfz7VSVQ/exec';
+
+function syncToGoogleSheet(reg) {
+  if (!GOOGLE_SHEET_WEBHOOK_URL) return;
+  try {
+    fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+      method: 'POST',
+      mode: 'no-cors', // Apps Script doesn't return CORS headers; fire-and-forget is fine, this is just a mirror copy
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
+      body: JSON.stringify(reg)
+    }).catch(err => console.warn('Google Sheet sync failed (non-blocking):', err));
+  } catch (err) {
+    console.warn('Google Sheet sync failed (non-blocking):', err);
+  }
+}
+
+// ============================================================
 // DEFAULT CONFIG (overridden by localStorage)
 // ============================================================
 const DEFAULT_PASSWORDS = ['TTR202411'];
@@ -673,14 +809,42 @@ const MEMBER_CODES_DEFAULT = [
 ];
 
 const DEFAULT_CLASSES = [
-  { key: 'express',     name: 'Express Coaching',              hours: '7 Hours',  normalPrice: 1996000,  price: 1099000, type: 'private',     memberPrice: null, active: true },
-  { key: 'basic',       name: '⭐ Basic Coaching',              hours: '10 Hours', normalPrice: 3899000,  price: 1899000, type: 'private',     memberPrice: null, active: true },
-  { key: 'intensive',   name: '⭐ Intensive Coaching',          hours: '20 Hours', normalPrice: 7999000,  price: 3199000, type: 'private',     memberPrice: null, active: true },
-  { key: 'elite',       name: '⭐ ELITE Coaching',              hours: '40 Hours', normalPrice: 11699000, price: 5899000, type: 'private',     memberPrice: null, active: true },
-  { key: 'semiprivate', name: '⭐ Semi Private',                hours: '20 Hours', normalPrice: 945000,   price: 899000,  type: 'semiprivate', memberPrice: 879000, active: true },
-  { key: 'wns',         name: 'Writing & Speaking Class',      hours: '15 Hours', normalPrice: 489000,   price: 459000,  type: 'group',       memberPrice: 439000, active: true },
-  { key: 'grammar',     name: 'Grammar Group Class',           hours: '10 Hours', normalPrice: 279000,   price: 239000,  type: 'group',       memberPrice: 229000, active: true },
-  { key: 'bundle',      name: 'Bundle Writing + Speaking + Grammar', hours: '25 Hours', normalPrice: 749000,  price: 699000,  type: 'group',       memberPrice: 649000, active: true },
+  // ── IELTS Preparation – Private ───────────────────────────────────────────
+  { key: 'express',           name: 'Express Coaching',                   hours: '5 Hours',  normalPrice: 1552600,  price: 1109000, type: 'private',     category: 'ielts_prep', memberPrice: null, active: true },
+  { key: 'basic',             name: '⭐ Basic Coaching',                   hours: '10 Hours', normalPrice: 2658600,  price: 1899000, type: 'private',     category: 'ielts_prep', memberPrice: null, active: true },
+  { key: 'intensive',         name: '⭐ Intensive Coaching',               hours: '20 Hours', normalPrice: 4618600,  price: 3299000, type: 'private',     category: 'ielts_prep', memberPrice: null, active: true },
+  { key: 'elite',             name: '⭐ ELITE Coaching',                   hours: '40 Hours', normalPrice: 8258600,  price: 5899000, type: 'private',     category: 'ielts_prep', memberPrice: null, active: true },
+  { key: 'whv',               name: 'IELTS General Training Coaching',    hours: '12 Hours', normalPrice: 2899000,  price: 1528155, type: 'private',     category: 'ielts_prep', memberPrice: null, active: true },
+  // ── IELTS Preparation – Group ─────────────────────────────────────────────
+  { key: 'semiprivate',       name: '⭐ Semi Private',                     hours: '20 Hours', normalPrice: 1309000,  price: 935000,  type: 'semiprivate', category: 'ielts_prep', memberPrice: null, promoTag: '🇮🇩 Promo 17-an', active: true },
+  { key: 'grammar',           name: 'IELTS All Skills — Beginner Class',  hours: '10 Hours', normalPrice: 679600,   price: 479000,  type: 'group',       category: 'ielts_prep', memberPrice: null, promoTag: '🇮🇩 Promo 17-an', active: true },
+  { key: 'wns',               name: 'Writing & Speaking Class',           hours: '15 Hours', normalPrice: 679600,   price: 479000,  type: 'group',       category: 'ielts_prep', memberPrice: null, promoTag: '🇮🇩 Promo 17-an', active: true },
+  { key: 'bundle',            name: 'Bundle: W&S + Grammar',              hours: '25 Hours', normalPrice: 908600,   price: 649000,  type: 'group',       category: 'ielts_prep', memberPrice: null, promoTag: '🇮🇩 Promo 17-an', active: true },
+  // ── Scholarship Preparation ───────────────────────────────────────────────
+  { key: 'scholarship',       name: '🎓 Scholarship Preparation 2027',    hours: '30 Jam IELTS + 10 Jam Scholarship', normalPrice: 6499000, price: 6499000, type: 'scholarship',    category: 'scholarship_prep', memberPrice: null, active: true },
+  { key: 'chevening_group',   name: 'IELTS + Chevening Prep Essay (Group)', hours: '10 Jam IELTS + 4 Sesi Essay Prep', normalPrice: 849000, price: 849000,  type: 'scholarship',    category: 'scholarship_prep', memberPrice: null, active: false },
+  { key: 'scholarship_nc1',   name: 'IELTS + Scholarship Prep (1 Sesi)', hours: '15 Jam IELTS + 1 Meeting Scholarship', normalPrice: 2699000, price: 2699000, type: 'scholarship_nc', category: 'scholarship_prep', memberPrice: null, active: true },
+  { key: 'scholarship_nc5',   name: 'IELTS + Scholarship Prep (5 Sesi)', hours: '15 Jam IELTS + 5 Meeting Scholarship', normalPrice: 3380000, price: 3380000, type: 'scholarship_nc', category: 'scholarship_prep', memberPrice: null, active: true },
+  { key: 'scholarship_nc10',  name: 'IELTS + Scholarship Prep (10 Sesi)',hours: 'IELTS + 10 Meeting Scholarship',        normalPrice: 4150000, price: 4150000, type: 'scholarship_nc', category: 'scholarship_prep', memberPrice: null, active: true },
+  // ── General English ───────────────────────────────────────────────────────
+  { key: 'general_english',      name: 'General English',      hours: '20 Hours', normalPrice: 5750000, price: 3299000, type: 'private', category: 'general_english', memberPrice: null, capacity: 'For 1–2 Persons', active: true },
+  { key: 'conversation_english', name: 'Conversation English', hours: '15 Hours', normalPrice: 4750000, price: 1899000, type: 'private', category: 'general_english', memberPrice: null, capacity: 'For 1–2 Persons', active: true },
+  { key: 'business_english',     name: 'Business English',     hours: '15 Hours', normalPrice: 4750000, price: 1899000, type: 'private', category: 'general_english', memberPrice: null, capacity: 'For 1–2 Persons', active: true },
+  // ── Essay Checking & Interview Preparation ────────────────────────────────
+  { key: 'essay_single',    name: 'Single Session',    hours: '1 Hour',   normalPrice: 200000,  price: 200000,  type: 'private', category: 'essay_interview', memberPrice: null, active: true },
+  { key: 'essay_standard',  name: 'Standard Package',  hours: '5 Hours',  normalPrice: 985000,  price: 985000,  type: 'private', category: 'essay_interview', memberPrice: null, active: true },
+  { key: 'essay_intensive', name: 'Intensive Package', hours: '10 Hours', normalPrice: 1800000, price: 1800000, type: 'private', category: 'essay_interview', memberPrice: null, active: true },
+  // ── IDP Package ───────────────────────────────────────────────────────────
+  { key: 'idp_test',   name: 'IELTS by IDP',                           hours: 'Official Test',                 normalPrice: 3490000, price: 3490000, type: 'idp', category: 'idp_package', memberPrice: null, active: true },
+  { key: 'idp_prep5',  name: 'Prep Class (5h) + IELTS by IDP',        hours: '5 Hours prep + Official Test',  normalPrice: 4190000, price: 4190000, type: 'idp', category: 'idp_package', memberPrice: null, active: true },
+  { key: 'idp_prep10', name: 'Prep Class (10h) + IELTS by IDP',       hours: '10 Hours prep + Official Test', normalPrice: 6990000, price: 6990000, type: 'idp', category: 'idp_package', memberPrice: null, active: true },
+];
+
+// Special promo codes (fixed-amount discount for private classes)
+// Change code strings here or via admin panel
+const DEFAULT_PROMO_CODES = [
+  { code: 'TUTORY17AGT', discount: 170000, label: '🇮🇩 Promo HUT RI — Diskon Private 10–20 Jam', applicableKeys: ['basic', 'intensive', 'whv'] },
+  { code: 'MERDEKA17AGT', discount: 270000, label: '🇮🇩 Promo HUT RI — Diskon Private 40 Jam',   applicableKeys: ['elite'] },
 ];
 
 // Detail benefit & deskripsi tiap kelas (sumber: June Pricelist V.2)
@@ -769,6 +933,147 @@ const CLASS_BENEFITS = {
       'Free Access to Tutory Community',
       'Most comprehensive & best value group package'
     ]
+  },
+  whv: {
+    desc: 'Program IELTS General Training khusus untuk persiapan visa WHV (Working Holiday Visa) ke Australia, Selandia Baru, dll.',
+    items: [
+      'Fokus IELTS General Training (4 skill: Listening, Reading, Writing, Speaking)',
+      'Tips & strategi khusus GT Reading dan Letter Writing',
+      'English praktis untuk kerja & kehidupan sehari-hari di luar negeri',
+      'Free 1x diagnostic test & progress report',
+      'Jadwal fleksibel sesuai keinginan kamu'
+    ]
+  },
+  scholarship: {
+    desc: 'Paket lengkap untuk persiapan IELTS dan beasiswa Chevening — cocok untuk yang ingin apply ke universitas luar negeri dengan beasiswa penuh.',
+    items: [
+      '20 jam IELTS preparation (4 skill, jadwal pribadi, fleksibel)',
+      '4 jam scholarship preparation (essay coaching & review)',
+      '1 jam konsultasi LoA & dokumen aplikasi',
+      'Free 1x pre-test, progress test, final test & post test',
+      'Bisa dibantu daftar langsung untuk tes IELTS (gratis)'
+    ]
+  },
+  chevening_group: {
+    desc: 'Kelas group untuk persiapan beasiswa Chevening — cocok buat kamu yang ingin belajar bareng dan lebih hemat.',
+    items: [
+      '10 jam kelas IELTS (group, Batch Agustus)',
+      '4 sesi Chevening essay preparation (group coaching)',
+      '1x konsultasi IDP & dokumen aplikasi beasiswa',
+      'Belajar bareng sesama applicant Chevening',
+      'Member price: IDR 799.000'
+    ]
+  },
+  scholarship_nc1: {
+    desc: 'Paket IELTS + Scholarship untuk persiapan beasiswa Non-Chevening dengan 1 sesi konsultasi essay.',
+    items: [
+      '15 jam kelas IELTS privat (4 skill)',
+      '1x sesi scholarship preparation (essay consultation & review)',
+      'Free class recordings & materi belajar',
+      'Jadwal IELTS fleksibel sesuai kebutuhan kamu'
+    ]
+  },
+  scholarship_nc5: {
+    desc: 'Paket IELTS + Scholarship untuk persiapan beasiswa Non-Chevening dengan 5 sesi pendampingan essay — paling populer!',
+    items: [
+      '15 jam kelas IELTS privat (4 skill)',
+      '5x sesi scholarship preparation (draft, revisi, finalisasi essay)',
+      'Free class recordings & materi belajar',
+      'Jadwal IELTS fleksibel sesuai kebutuhan kamu'
+    ]
+  },
+  scholarship_nc10: {
+    desc: 'Paket IELTS + Scholarship intensif untuk persiapan beasiswa Non-Chevening dengan 10 sesi pendampingan — paling komprehensif.',
+    items: [
+      'Kelas IELTS privat (4 skill)',
+      '10x sesi scholarship preparation (pendampingan intensif essay dari awal hingga submission)',
+      'Free class recordings & materi belajar',
+      'Jadwal IELTS fleksibel sesuai kebutuhan kamu'
+    ]
+  },
+  essay_single: {
+    desc: '1 sesi private mentoring (1 jam) — pilih antara Essay Review atau Mock Interview.',
+    items: [
+      'Essay review atau mock interview (pilih salah satu)',
+      'Personalized feedback dari mentor berpengalaman',
+      'Cocok untuk review cepat sebelum deadline'
+    ]
+  },
+  essay_standard: {
+    desc: '5 jam private mentoring — fleksibel untuk essay checking & interview preparation.',
+    items: [
+      '5 jam total sesi (bisa dibagi sesuai kebutuhan)',
+      'Essay review, personal statement feedback, mock interview',
+      'Flexible scheduling — jadwal sesuai keinginan kamu',
+      'Personalized guidance untuk strengthening aplikasi beasiswa'
+    ]
+  },
+  essay_intensive: {
+    desc: '10 jam private mentoring intensif — comprehensive essay guidance & interview coaching.',
+    items: [
+      '10 jam total sesi — paling komprehensif',
+      'Full essay guidance dari draft hingga final',
+      'Mock interview intensif dengan feedback mendetail',
+      'Personal statement & motivation letter review',
+      'Flexible scheduling — jadwal sesuai keinginan kamu'
+    ]
+  },
+  general_english: {
+    desc: 'For improving general English skills — not for IELTS test preparation.',
+    items: [
+      'Focuses on 4 core skills: grammar, vocabulary, listening & speaking',
+      'Suitable for beginner to intermediate level',
+      'Material tailored to daily/academic needs',
+      'Free detailed progress report'
+    ]
+  },
+  conversation_english: {
+    desc: 'For improving general English skills — not for IELTS test preparation.',
+    items: [
+      'Focuses on speaking & fluency through real conversation scenarios',
+      'Interactive practice with a tutor, not just theory memorization',
+      'Great for interview prep, travel, or networking',
+      'Pronunciation feedback & confidence building'
+    ]
+  },
+  business_english: {
+    desc: 'For improving general English skills — not for IELTS test preparation.',
+    items: [
+      'Focuses on professional communication: email, presentations & meetings',
+      'Case studies & roleplay tailored to industry needs',
+      'Suitable for professionals and corporate employees',
+      'Personal feedback from tutor'
+    ]
+  },
+  idp_test: {
+    desc: 'Tutory English collaborates directly with IDP IELTS to provide comprehensive, end-to-end support for students planning to study abroad.',
+    items: [
+      'Visa Preparation Assistance — step-by-step guidance throughout the visa application process',
+      'Accommodation Search Support — help finding safe, comfortable, and budget-appropriate housing',
+      'University Placement Guidance — support identifying and applying to universities that match your goals',
+      'Document Preparation — assistance organizing academic records, personal statements, and other materials',
+      'IELTS Test Registration and Preparation — official IDP test registration facilitated directly by Tutory'
+    ]
+  },
+  idp_prep5: {
+    desc: 'Tutory English collaborates directly with IDP IELTS to provide comprehensive, end-to-end support for students planning to study abroad.',
+    items: [
+      'Visa Preparation Assistance — step-by-step guidance throughout the visa application process',
+      'Accommodation Search Support — help finding safe, comfortable, and budget-appropriate housing',
+      'University Placement Guidance — support identifying and applying to universities that match your goals',
+      'Document Preparation — assistance organizing academic records, personal statements, and other materials',
+      'IELTS Test Registration and Preparation — official IDP test registration + 5 hours structured preparation'
+    ]
+  },
+  idp_prep10: {
+    desc: 'Tutory English collaborates directly with IDP IELTS to provide comprehensive, end-to-end support for students planning to study abroad.',
+    items: [
+      'Visa Preparation Assistance — step-by-step guidance throughout the visa application process',
+      'Accommodation Search Support — help finding safe, comfortable, and budget-appropriate housing',
+      'University Placement Guidance — support identifying and applying to universities that match your goals',
+      'Document Preparation — assistance organizing academic records, personal statements, and other materials',
+      'IELTS Test Registration and Preparation — official IDP test registration + 10 hours structured preparation'
+    ]
   }
 };
 
@@ -782,7 +1087,31 @@ function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); 
 const storedPasswords = load('tutory_passwords', []);
 let adminPasswords = [...new Set([...DEFAULT_PASSWORDS, ...storedPasswords])];
 let waNumber       = load('tutory_wa', DEFAULT_WA);
-let classes        = load('tutory_classes', DEFAULT_CLASSES);
+function migrateClasses(arr) {
+  // Backward-compat: add/fix category AND type if missing (old cached/Supabase data)
+  const keyToCat = {
+    express:'ielts_prep', basic:'ielts_prep', intensive:'ielts_prep', elite:'ielts_prep', whv:'ielts_prep',
+    semiprivate:'ielts_prep', wns:'ielts_prep', grammar:'ielts_prep', bundle:'ielts_prep',
+    scholarship:'scholarship_prep', chevening_group:'scholarship_prep', scholarship_nc1:'scholarship_prep', scholarship_nc5:'scholarship_prep', scholarship_nc10:'scholarship_prep',
+    essay_single:'essay_interview', essay_standard:'essay_interview', essay_intensive:'essay_interview',
+    general_english:'general_english', conversation_english:'general_english', business_english:'general_english',
+    idp_test:'idp_package', idp_prep5:'idp_package', idp_prep10:'idp_package'
+  };
+  const keyToType = {
+    semiprivate:'semiprivate',
+    wns:'group', grammar:'group', bundle:'group',
+    scholarship:'scholarship', chevening_group:'scholarship',
+    scholarship_nc1:'scholarship_nc', scholarship_nc5:'scholarship_nc', scholarship_nc10:'scholarship_nc',
+    idp_test:'idp', idp_prep5:'idp', idp_prep10:'idp'
+  };
+  return arr.map(c => ({
+    ...c,
+    category: c.category || keyToCat[c.key] || 'ielts_prep',
+    type: keyToType[c.key] || c.type || 'private'
+  }));
+}
+// Always start from DEFAULT_CLASSES (correct structure); Supabase only overrides price/name
+let classes = DEFAULT_CLASSES.map(c => ({ ...c }));
 let registrations  = load('tutory_registrations', []);
 let memberCodes    = load('tutory_member_codes', MEMBER_CODES_DEFAULT);
 let usedCodes      = load('tutory_used_codes', []);
@@ -797,8 +1126,20 @@ async function loadClassesFromSupabase() {
     if (error || !data) return;
     const remote = data.value;
     if (Array.isArray(remote) && remote.length > 0) {
-      classes = remote;
-      save('tutory_classes', classes); // cache locally
+      // Merge strategy: DEFAULT_CLASSES is the source of truth for structure.
+      // Supabase overrides name/price/active for existing keys (admin edits).
+      // New classes added in code but not yet in Supabase still appear (from DEFAULT_CLASSES).
+      const remoteMap = {};
+      migrateClasses(remote).forEach(c => { remoteMap[c.key] = c; });
+      classes = DEFAULT_CLASSES.map(def => remoteMap[def.key]
+        ? { ...def, ...remoteMap[def.key], category: def.category, type: def.type }
+        : def
+      );
+      // Also keep any Supabase-only keys (added via admin panel, not in DEFAULT_CLASSES)
+      migrateClasses(remote).forEach(c => {
+        if (!classes.find(x => x.key === c.key)) classes.push(c);
+      });
+      save('tutory_classes', classes);
     }
   } catch(e) { console.warn('Could not load classes from Supabase:', e); }
 }
@@ -814,7 +1155,11 @@ async function saveClassesToSupabase() {
 // ============================================================
 let currentStep = 1;
 let selectedClass = null;
+let selectedCategory = null;
 let memberCodeApplied = false;
+let promoCodeApplied  = false;
+let promoDiscount     = 0;
+let appliedPromoCode  = null;
 let currentPrice = 0;
 let appliedCode = null;
 
@@ -828,23 +1173,80 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ============================================================
 // CLASS CARDS RENDER
 // ============================================================
+// ============================================================
+// CATEGORY PICKER
+// ============================================================
+function selectCategory(cat) {
+  selectedCategory = cat;
+  document.getElementById('category-picker').style.display = 'none';
+  document.getElementById('class-picker').style.display = 'block';
+  ['section-ielts','section-scholarship','section-general','section-idp','section-essay'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  const catSectionMap = {
+    ielts_prep:       'section-ielts',
+    scholarship_prep: 'section-scholarship',
+    general_english:  'section-general',
+    idp_package:      'section-idp',
+    essay_interview:  'section-essay'
+  };
+  if (catSectionMap[cat]) document.getElementById(catSectionMap[cat]).style.display = 'block';
+  document.getElementById('band-guarantee-banner').style.display = (cat === 'ielts_prep') ? 'block' : 'none';
+  const catLabels = {
+    ielts_prep:       '📚 IELTS Preparation: Private & Group Class',
+    scholarship_prep: '🎓 IELTS + Scholarship Preparation',
+    general_english:  '🗣️ General English Private Class',
+    idp_package:      '📋 IELTS Prep + Official Test Package (IDP)',
+    essay_interview:  '✍️ Essay Checking & Interview Preparation'
+  };
+  document.getElementById('selected-cat-label').textContent = catLabels[cat] || '';
+  document.getElementById('f-class-err').style.display = 'none';
+}
+
+function resetCategory() {
+  selectedCategory = null;
+  selectedClass = null;
+  document.querySelectorAll('input[name="classChoice"]').forEach(r => { r.checked = false; });
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.benefit-panel').forEach(p => { p.style.display = 'none'; });
+  const idpSec = document.getElementById('idp-docs-section');
+  if (idpSec) idpSec.style.display = 'none';
+  document.getElementById('category-picker').style.display = 'block';
+  document.getElementById('class-picker').style.display = 'none';
+  document.getElementById('f-class-err').style.display = 'none';
+}
+
 function renderClassCards() {
-  ['private','semiprivate','group'].forEach(type => {
-    const grid = document.getElementById('class-grid-' + type);
+  const sections = [
+    { gridId: 'class-grid-ielts-private',         filter: c => c.category === 'ielts_prep' && c.type === 'private' },
+    { gridId: 'class-grid-ielts-group',           filter: c => c.category === 'ielts_prep' && (c.type === 'semiprivate' || c.type === 'group') },
+    { gridId: 'class-grid-scholarship-chevening', filter: c => c.type === 'scholarship' },
+    { gridId: 'class-grid-scholarship-nc',        filter: c => c.type === 'scholarship_nc' },
+    { gridId: 'class-grid-general',               filter: c => c.category === 'general_english' },
+    { gridId: 'class-grid-idp',                   filter: c => c.type === 'idp' },
+    { gridId: 'class-grid-essay',                 filter: c => c.category === 'essay_interview' },
+  ];
+  sections.forEach(({ gridId, filter }) => {
+    const grid = document.getElementById(gridId);
     if (!grid) return;
     grid.innerHTML = '';
-    classes.filter(c => c.type === type && c.active).forEach(c => {
-      const isGroup = c.type === 'group';
+    classes.filter(c => filter(c) && c.active).forEach(c => {
       const promoPct = (c.normalPrice > c.price) ? Math.round((c.normalPrice - c.price) / c.normalPrice * 100) : 0;
       const benefit = CLASS_BENEFITS[c.key];
+      const metaExtra = c.capacity ? ` · ${c.capacity}` : (c.type === 'group' ? ' · Up to 15 students' : c.type === 'semiprivate' ? ' · Max 8 students' : '');
+      const typeLabel = c.type === 'semiprivate' ? 'Semi Private'
+                      : c.type === 'group'        ? 'Group'
+                      : c.type === 'idp'          ? 'IDP'
+                      : (c.type === 'scholarship' || c.type === 'scholarship_nc') ? 'Scholarship'
+                      : 'Private';
       grid.innerHTML += `
         <label class="class-card" id="cc-${c.key}">
           <input type="radio" name="classChoice" value="${c.key}" onchange="selectClass(this)">
           <div class="check-icon">✓</div>
-          <div class="class-name">${c.name} <span class="badge badge-type">${c.type === 'semiprivate' ? 'Semi Private' : c.type === 'group' ? 'Group' : 'Private'}</span>${c.type === 'private' && promoPct > 0 ? ` <span class="badge" style="background:#fee2e2;color:#dc2626;">Promo ${promoPct}%</span>` : ''}</div>
-          <div class="class-meta">${c.hours}${isGroup ? ' · Up to 15 students' : ''}</div>
+          <div class="class-name">${c.name} <span class="badge badge-type">${typeLabel}</span>${c.promoTag ? ` <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #f59e0b;">${c.promoTag}</span>` : (promoPct > 0 ? ` <span class="badge" style="background:#fee2e2;color:#dc2626;">Promo ${promoPct}%</span>` : '')}</div>
+          <div class="class-meta">${c.hours}${metaExtra}</div>
           <div class="class-price">
-            <div class="price-normal">IDR ${fmt(c.normalPrice)}</div>
+            ${promoPct > 0 ? `<div class="price-normal">IDR ${fmt(c.normalPrice)}</div>` : ''}
             <div class="price-promo">IDR ${fmt(c.price)}${c.memberPrice ? ' <span style="font-size:.75rem;color:var(--gray)">(non-member)</span>' : ''}</div>
             ${c.memberPrice ? `<div style="font-size:.8rem;color:var(--green);margin-top:2px;">IDR ${fmt(c.memberPrice)} with member code</div>` : ''}
           </div>
@@ -852,9 +1254,7 @@ function renderClassCards() {
           <div class="benefit-panel" id="benefit-panel-${c.key}" style="display:none;">
             <div class="benefit-title">✨ What you'll get:</div>
             ${benefit.desc ? `<div class="benefit-desc">${benefit.desc}</div>` : ''}
-            <ul class="benefit-list">
-              ${benefit.items.map(b => `<li>${b}</li>`).join('')}
-            </ul>
+            <ul class="benefit-list">${benefit.items.map(b => `<li>${b}</li>`).join('')}</ul>
           </div>` : ''}
         </label>`;
     });
@@ -908,6 +1308,14 @@ function validateStep(step) {
     ok = req('weak-skill','f-weak-skill') && ok;
     if (!selectedClass) { document.getElementById('f-class-err').style.display='block'; ok = false; }
     else document.getElementById('f-class-err').style.display='none';
+
+    const selInfo = classes.find(c => c.key === selectedClass);
+    if (selInfo && selInfo.type === 'idp') {
+      ok = req('ktp-number','f-ktp-number') && ok;
+      const photoFile = document.getElementById('passport-photo-file').files[0];
+      if (!photoFile) { document.getElementById('f-passport-photo-err').style.display='block'; ok = false; }
+      else document.getElementById('f-passport-photo-err').style.display='none';
+    }
     return ok;
   }
   return true;
@@ -952,6 +1360,11 @@ function selectClass(radio) {
   document.querySelectorAll('.benefit-panel').forEach(p => p.style.display = 'none');
   const panel = document.getElementById('benefit-panel-' + radio.value);
   if (panel) panel.style.display = 'block';
+
+  // Show KTP + Pass Photo section only for IDP packages (needed for official test application)
+  const info = classes.find(c => c.key === radio.value);
+  const idpSection = document.getElementById('idp-docs-section');
+  if (idpSection) idpSection.style.display = (info && info.type === 'idp') ? 'block' : 'none';
 }
 
 // ============================================================
@@ -964,18 +1377,52 @@ function buildPaymentPage() {
   document.getElementById('ps-class').textContent = info.name + ' · ' + info.hours;
   currentPrice = info.price;
   memberCodeApplied = false;
+  promoCodeApplied  = false;
+  promoDiscount     = 0;
+  appliedPromoCode  = null;
   appliedCode = null;
   document.getElementById('member-code-input').value = '';
   document.getElementById('code-msg').textContent = '';
+  document.getElementById('promo-code-input').value = '';
+  document.getElementById('promo-msg').textContent = '';
   updatePriceDisplay();
+  // Member code: group/semiprivate only
   document.getElementById('member-code-box').style.display = info.memberPrice ? 'block' : 'none';
+  // Promo code: private classes with eligible promo
+  const hasPromo = DEFAULT_PROMO_CODES.some(p => p.applicableKeys.includes(selectedClass));
+  document.getElementById('promo-code-box').style.display = hasPromo ? 'block' : 'none';
 }
 
 function updatePriceDisplay() {
-  document.getElementById('ps-price').textContent = 'IDR ' + fmt(currentPrice);
-  const oldEl = document.getElementById('ps-old-price');
   const info = classes.find(c => c.key === selectedClass);
-  oldEl.textContent = memberCodeApplied ? 'IDR ' + fmt(info.price) + ' (non-member)' : '';
+  const oldEl = document.getElementById('ps-old-price');
+  if (memberCodeApplied) {
+    oldEl.textContent = 'IDR ' + fmt(info.price) + ' (non-member)';
+  } else if (promoCodeApplied) {
+    oldEl.textContent = 'IDR ' + fmt(info.price) + ' − IDR ' + fmt(promoDiscount) + ' (promo)';
+  } else {
+    oldEl.textContent = '';
+  }
+  document.getElementById('ps-price').textContent = 'IDR ' + fmt(currentPrice);
+}
+
+// ============================================================
+// PROMO CODE
+// ============================================================
+function applyPromoCode() {
+  const input = document.getElementById('promo-code-input').value.trim().toUpperCase();
+  const msg   = document.getElementById('promo-msg');
+  const info  = classes.find(c => c.key === selectedClass);
+  if (!input) { msg.textContent = 'Masukkan kode promo.'; msg.className = 'code-msg invalid'; return; }
+  const promo = DEFAULT_PROMO_CODES.find(p => p.code === input && p.applicableKeys.includes(selectedClass));
+  if (!promo) { msg.textContent = '❌ Kode tidak valid atau tidak berlaku untuk kelas ini.'; msg.className = 'code-msg invalid'; return; }
+  promoCodeApplied = true;
+  promoDiscount    = promo.discount;
+  appliedPromoCode = input;
+  currentPrice     = Math.max(0, info.price - promoDiscount);
+  msg.textContent  = `✅ ${promo.label} — diskon IDR ${fmt(promoDiscount)} diterapkan!`;
+  msg.className    = 'code-msg valid';
+  updatePriceDisplay();
 }
 
 function fmt(n) { return Number(n).toLocaleString('id-ID'); }
@@ -1025,6 +1472,22 @@ function handleUpload(input) {
   document.getElementById('f-proof-err').style.display = 'none';
 }
 
+function handlePassportPhotoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('passport-photo-preview');
+  const previewImg = document.getElementById('passport-photo-preview-img');
+  const previewName = document.getElementById('passport-photo-preview-name');
+  previewName.textContent = file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => { previewImg.src = e.target.result; previewImg.style.display='block'; };
+    reader.readAsDataURL(file);
+  } else { previewImg.style.display='none'; }
+  preview.style.display = 'block';
+  document.getElementById('f-passport-photo-err').style.display = 'none';
+}
+
 // ============================================================
 // SUBMIT
 // ============================================================
@@ -1044,6 +1507,16 @@ async function submitForm() {
   const info = classes.find(c => c.key === selectedClass);
   const occVal = document.getElementById('occupation').value;
   const purposeVal = document.getElementById('purpose').value;
+
+  // IDP-only documents (KTP number + pass photo) — appended into notes since
+  // there's no dedicated column for these in the registrations table.
+  let notesVal = document.getElementById('notes').value;
+  if (info.type === 'idp') {
+    const ktpVal = document.getElementById('ktp-number').value.trim();
+    const photoFile = document.getElementById('passport-photo-file').files[0];
+    const idpNote = `[IDP Application] KTP Number: ${ktpVal} | Pass Photo file: ${photoFile ? photoFile.name : '-'}`;
+    notesVal = notesVal ? `${idpNote}\n${notesVal}` : idpNote;
+  }
 
   const reg = {
     id: Date.now(),
@@ -1066,7 +1539,9 @@ async function submitForm() {
     classHours: info.hours,
     amountPaid: currentPrice,
     memberCode: appliedCode || '',
-    notes: document.getElementById('notes').value,
+    promoCode: appliedPromoCode || '',
+    promoDiscount: promoDiscount || 0,
+    notes: notesVal,
   };
 
   if (appliedCode) {
@@ -1116,8 +1591,15 @@ async function submitForm() {
   }
 
   // 2. Also send to Admin Management System (students table)
-  const classTypeMap = { private: 'Private', semiprivate: 'Semi private', group: 'Group class', wns: 'Group class', grammar: 'Group class', bundle: 'Group class' };
-  const adminClassType = classTypeMap[reg.classKey] || 'Private';
+  const typeToAdminType = {
+    private:        'Private',
+    semiprivate:    'Semi private',
+    group:          'Group class',
+    scholarship:    'Scholarship',
+    scholarship_nc: 'Scholarship',
+    idp:            'IDP Package'
+  };
+  const adminClassType = typeToAdminType[info.type] || 'Private';
 
   // Get next student number from admin db
   const { data: existingStudents } = await adminDb.from('students').select('id, data').order('id');
@@ -1126,7 +1608,7 @@ async function submitForm() {
     .map(sn => { const m = sn.match(/(\d+)\s*$/); return m ? parseInt(m[1]) : 0; })
     .filter(n => n > 0);
   const nextNum = (numbers.length ? Math.max(...numbers) : 0) + 1;
-  const prefixMap = { 'Private': 'PVT', 'Semi private': 'SPVT', 'Group class': 'GC' };
+  const prefixMap = { 'Private': 'PVT', 'Semi private': 'SPVT', 'Group class': 'GC', 'Scholarship': 'SCH', 'IDP Package': 'IDP' };
   const studentNumber = `${prefixMap[adminClassType] || 'REG'}-${new Date().getFullYear()}-${String(nextNum).padStart(3,'0')}`;
 
   const adminStudentData = {
@@ -1167,6 +1649,9 @@ async function submitForm() {
     console.error('Admin DB error:', adminError);
     // Don't alert user — registration still succeeded
   }
+
+  // 3. Mirror copy to Google Sheet (non-blocking, skipped if no webhook URL set)
+  syncToGoogleSheet(reg);
 
   document.getElementById('success-name').textContent = reg.fullname;
   document.getElementById('success-class').textContent = info.name;
@@ -1328,6 +1813,9 @@ function renderClassEditor() {
             <option value="private" ${c.type==='private'?'selected':''}>Private</option>
             <option value="semiprivate" ${c.type==='semiprivate'?'selected':''}>Semi Private</option>
             <option value="group" ${c.type==='group'?'selected':''}>Group</option>
+            <option value="scholarship" ${c.type==='scholarship'?'selected':''}>Scholarship</option>
+            <option value="scholarship_nc" ${c.type==='scholarship_nc'?'selected':''}>Scholarship NC</option>
+            <option value="idp" ${c.type==='idp'?'selected':''}>IDP Package</option>
           </select>
         </div>
         <div class="toggle-wrap">
@@ -1506,6 +1994,28 @@ async function exportCSV() {
   const a = document.createElement('a');
   a.href=url; a.download='tutory_registrations_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click(); URL.revokeObjectURL(url);
+}
+
+async function exportXLSX() {
+  const { data, error } = await db.from('registrations').select('*').order('created_at', { ascending: false });
+  if (error) { alert('Gagal mengambil data: ' + error.message); return; }
+  if (!data || data.length === 0) { alert('No registrations to export.'); return; }
+
+  const headers = ['#','Date','Full Name','Nickname','DOB','Gender','Email','Phone','Instagram','Occupation','Purpose','Target Band','Source','Current Level','Weak Skill','Class','Hours','Amount (IDR)','Member Code','Notes'];
+  const rows = data.map((r,i) => [
+    i+1,
+    new Date(r.created_at).toLocaleString('id-ID'),
+    r.fullname, r.nickname, r.dob, r.gender,
+    r.email, r.phone, r.instagram, r.occupation, r.purpose,
+    r.target_band, r.source, r.current_band, r.weak_skill,
+    r.class_name, r.class_hours, r.amount_paid, r.member_code, r.notes
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = headers.map(() => ({ wch: 18 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Registrations');
+  XLSX.writeFile(wb, 'tutory_registrations_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 function clearAllData() {
