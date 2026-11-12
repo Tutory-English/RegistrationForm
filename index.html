@@ -144,33 +144,6 @@
   .success-screen h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
   .success-screen p { color: var(--gray); font-size: .95rem; line-height: 1.6; }
 
-  .admin-toggle { text-align: center; margin-top: 24px; font-size: .78rem; color: var(--gray); }
-  .admin-toggle a { color: var(--blue); cursor: pointer; text-decoration: none; }
-  .admin-panel { background: white; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,.07); margin-top: 24px; overflow: hidden; display: none; }
-  .admin-panel.visible { display: block; }
-  .admin-header { background: #1e293b; color: white; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .admin-header h3 { font-size: 1rem; font-weight: 700; }
-  .admin-tabs { display: flex; border-bottom: 2px solid var(--border); background: white; }
-  .admin-tab { padding: 14px 20px; font-size: .85rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; color: var(--gray); }
-  .admin-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
-  .admin-tab-content { display: none; padding: 24px 28px; }
-  .admin-tab-content.active { display: block; }
-
-  .btn-export { background: var(--green); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 700; font-size: .82rem; cursor: pointer; }
-  .btn-danger { background: var(--red); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 700; font-size: .82rem; cursor: pointer; }
-  .admin-body { padding: 0; }
-  .reg-count { font-size: .85rem; color: var(--gray); margin-bottom: 16px; }
-  .reg-table-wrap { overflow-x: auto; }
-  .reg-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-  .reg-table th { background: var(--gray-light); padding: 10px 12px; text-align: left; font-weight: 700; border-bottom: 2px solid var(--border); white-space: nowrap; }
-  .reg-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  .reg-table tr:last-child td { border-bottom: none; }
-  .reg-table tr:hover td { background: var(--gray-light); }
-  .no-data { text-align: center; color: var(--gray); padding: 32px; font-size: .88rem; }
-
-  .admin-pw-form { padding: 24px 28px; }
-  .admin-pw-form p { font-size: .88rem; color: var(--gray); margin-bottom: 12px; }
-
   .step-page { display: none; }
   .step-page.active { display: block; }
 
@@ -888,122 +861,14 @@
 
   </div><!-- /card -->
 
-  <!-- ADMIN TOGGLE -->
-  <div class="admin-toggle" style="position:fixed;bottom:20px;right:20px;z-index:100;background:rgba(255,255,255,.92);padding:8px 14px;border-radius:50px;box-shadow:0 2px 12px rgba(0,0,0,.12);backdrop-filter:blur(4px);">
-    <a onclick="toggleAdmin()" style="font-size:.8rem;">⚙️ Admin</a>
-  </div>
-
-  <!-- ADMIN PANEL -->
-  <div class="admin-panel" id="admin-panel">
-    <div class="admin-header">
-      <h3>📊 Admin Panel – Tutory English</h3>
-      <div id="admin-action-btns" style="display:none;gap:8px;flex-wrap:wrap;">
-        <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
-        <button class="btn-export" onclick="exportXLSX()">⬇ Export Excel (.xlsx)</button>
-        <button class="btn-danger" onclick="clearAllData()">🗑 Clear Data</button>
-      </div>
-    </div>
-
-    <!-- PW GATE -->
-    <div id="admin-pw-section" class="admin-pw-form">
-      <p>Enter admin password to access the panel:</p>
-      <div style="display:flex;gap:8px;">
-        <input type="password" id="admin-pw-input" placeholder="Password" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;" onkeydown="if(event.key==='Enter')checkAdminPw()">
-        <button class="btn-apply" onclick="checkAdminPw()">Enter</button>
-      </div>
-      <div id="admin-pw-err" style="color:var(--red);font-size:.8rem;margin-top:6px;display:none">Incorrect password. Try again.</div>
-    </div>
-
-    <div id="admin-data-section" style="display:none;">
-      <!-- TABS -->
-      <div class="admin-tabs">
-        <div class="admin-tab active" onclick="switchTab('registrations')">📋 Registrations</div>
-        <div class="admin-tab" onclick="switchTab('classes')">✏️ Edit Classes</div>
-        <div class="admin-tab" onclick="switchTab('codes')">🏷️ Member Codes</div>
-        <div class="admin-tab" onclick="switchTab('settings')">⚙️ Settings</div>
-      </div>
-
-      <!-- TAB: REGISTRATIONS -->
-      <div id="tab-registrations" class="admin-tab-content active">
-        <div class="reg-count" id="reg-count">0 registrations</div>
-        <div class="reg-table-wrap">
-          <table class="reg-table" id="reg-table">
-            <thead>
-              <tr>
-                <th>#</th><th>Date</th><th>Name</th><th>Phone</th><th>Email</th>
-                <th>Class</th><th>Amount</th><th>Current Level</th><th>Target Band</th>
-                <th>Occupation</th><th>Purpose</th><th>Source</th><th>Member Code</th><th>Notes</th>
-              </tr>
-            </thead>
-            <tbody id="reg-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- TAB: EDIT CLASSES -->
-      <div id="tab-classes" class="admin-tab-content">
-        <p style="font-size:.85rem;color:var(--gray);margin-bottom:16px;">Edit class names, hours, and prices. Toggle member price per class. Changes apply immediately.</p>
-        <div id="class-editor-rows"></div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px;">
-          <button class="save-btn" style="margin-top:0;" onclick="saveClassEdits()">💾 Save Changes</button>
-          <button class="save-btn" style="margin-top:0;background:var(--green);" onclick="addNewClass()">+ Add Class</button>
-        </div>
-        <div class="save-msg" id="class-save-msg">✅ Classes updated successfully!</div>
-      </div>
-
-      <!-- TAB: MEMBER CODES -->
-      <div id="tab-codes" class="admin-tab-content">
-        <p style="font-size:.85rem;color:var(--gray);margin-bottom:12px;">Share these unique codes with members for group class discounts. Used codes are shown in grey.</p>
-        <div class="member-codes-grid" id="codes-grid"></div>
-        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
-          <div style="font-weight:700;font-size:.88rem;margin-bottom:8px;">Add New Code</div>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="new-code-input" placeholder="e.g. TUTORY-M021" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;text-transform:uppercase;">
-            <button class="btn-apply" onclick="addMemberCode()">Add</button>
-          </div>
-          <div id="new-code-msg" style="font-size:.8rem;margin-top:6px;"></div>
-        </div>
-      </div>
-
-      <!-- TAB: SETTINGS -->
-      <div id="tab-settings" class="admin-tab-content">
-        <div style="font-weight:700;font-size:.95rem;margin-bottom:16px;">QRIS Image</div>
-        <p style="font-size:.85rem;color:var(--gray);margin-bottom:12px;">Upload your QRIS image and it will display on the payment page for all students.</p>
-        <div class="upload-area" style="max-width:300px;position:relative;">
-          <input type="file" accept="image/*" onchange="uploadQRIS(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
-          <div class="upload-icon">📱</div>
-          <div class="upload-text"><strong>Click to upload QRIS</strong><br>PNG or JPG</div>
-        </div>
-        <div id="qris-admin-preview" style="margin-top:12px;display:none;">
-          <img id="qris-admin-img" src="" style="max-width:180px;border-radius:8px;">
-          <div style="font-size:.8rem;color:var(--green);margin-top:4px;">✅ QRIS uploaded and active</div>
-          <button onclick="removeQRIS()" style="margin-top:8px;background:none;border:none;color:var(--red);font-size:.8rem;cursor:pointer;text-decoration:underline;">Remove QRIS</button>
-        </div>
-
-        <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border);">
-          <div style="font-weight:700;font-size:.95rem;margin-bottom:16px;">Admin Passwords</div>
-          <p style="font-size:.85rem;color:var(--gray);margin-bottom:12px;">Add or remove admin passwords (minimum 1 must remain).</p>
-          <div id="password-list" style="margin-bottom:12px;"></div>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="new-pw-input" placeholder="New password" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;">
-            <button class="btn-apply" onclick="addAdminPassword()">Add</button>
-          </div>
-          <div id="pw-msg" style="font-size:.8rem;margin-top:6px;"></div>
-        </div>
-
-        <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border);">
-          <div style="font-weight:700;font-size:.95rem;margin-bottom:8px;">WhatsApp Number</div>
-          <input type="text" id="wa-number-input" placeholder="e.g. 6287762013051" style="width:100%;max-width:280px;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;">
-          <div style="font-size:.78rem;color:var(--gray);margin-top:4px;">Format: country code + number, no spaces or dashes</div>
-          <button class="save-btn" onclick="saveSettings()" style="margin-top:12px;">💾 Save Settings</button>
-          <div class="save-msg" id="settings-save-msg">✅ Settings saved!</div>
-        </div>
-      </div>
-
-    </div>
-  </div>
 
 </div><!-- /main -->
+
+<!-- ADMIN SHORTCUT -->
+<div style="position:fixed;bottom:20px;right:20px;z-index:100;">
+  <a href="admin.html" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);padding:8px 14px;border-radius:50px;box-shadow:0 2px 12px rgba(0,0,0,.12);backdrop-filter:blur(4px);text-decoration:none;font-size:.8rem;color:#1d4ed8;font-weight:600;">⚙️ Admin</a>
+</div>
+
 
 <script>
 // ============================================================
@@ -2171,335 +2036,52 @@ function removeQRIS() {
 }
 
 // ============================================================
-// ADMIN PANEL
+// WHATSAPP
 // ============================================================
-let adminOpen = false;
-function toggleAdmin() {
-  adminOpen = !adminOpen;
-  document.getElementById('admin-panel').classList.toggle('visible', adminOpen);
-  if (!adminOpen) {
-    // Reset to password gate when closed
-    document.getElementById('admin-pw-section').style.display = 'block';
-    document.getElementById('admin-data-section').style.display = 'none';
-    document.getElementById('admin-action-btns').style.display = 'none';
-    document.getElementById('admin-pw-input').value = '';
+function sendWA() {
+  const reg = window._lastReg;
+  const info = classes.find(c => c.key === reg.classKey);
+  const msg = `Halo Tutory English! 👋\n\nSaya sudah mendaftar dan melakukan pembayaran.\n\n📋 *Detail Registrasi:*\n• Nama: ${reg.fullname}\n• Kelas: ${reg.className || info.name}${reg.classSchedule ? ' (' + reg.classSchedule + ')' : ''}\n• Durasi: ${info.hours}\n• Jumlah Bayar: IDR ${fmt(reg.amountPaid)}\n• Metode Bayar: ${reg.paymentMethod || '-'}\n• Rencana Bayar: ${reg.paymentPlan === 'cicilan' ? 'Cicilan (Cicilan 1: IDR ' + fmt(reg.installment1) + ' | Cicilan 2: IDR ' + fmt(reg.installment2) + ')' : 'Lunas'}\n\nMohon konfirmasinya. Terima kasih! 🙏`;
+  window.open('https://wa.me/' + waNumber + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+// ============================================================
+// QRIS
+// ============================================================
+function loadQRIS() {
+  // If admin uploaded a custom QRIS via the panel, use that; otherwise qris.png is used directly via src attribute
+  if (qrisData) {
+    const img = document.getElementById('qris-img');
+    img.src = qrisData;
+    img.style.display = 'block';
+    document.getElementById('qris-placeholder').style.display = 'none';
+    const adminImg = document.getElementById('qris-admin-img');
+    if (adminImg) { adminImg.src = qrisData; document.getElementById('qris-admin-preview').style.display='block'; }
   }
 }
 
-function checkAdminPw() {
-  const pw = document.getElementById('admin-pw-input').value;
-  if (adminPasswords.includes(pw)) {
-    document.getElementById('admin-pw-section').style.display = 'none';
-    document.getElementById('admin-data-section').style.display = 'block';
-    document.getElementById('admin-action-btns').style.display = 'flex';
-    renderAdminTable();
-    renderClassEditor();
-    renderCodes();
-    renderPasswords();
-    loadWASettings();
-  } else {
-    document.getElementById('admin-pw-err').style.display = 'block';
-  }
+function uploadQRIS(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    qrisData = e.target.result;
+    save('tutory_qris', qrisData);
+    loadQRIS();
+    document.getElementById('qris-admin-preview').style.display = 'block';
+    document.getElementById('qris-admin-img').src = qrisData;
+  };
+  reader.readAsDataURL(file);
 }
 
-function switchTab(tab) {
-  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.admin-tab-content').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
-  if (tab === 'codes') renderCodes();
-  if (tab === 'classes') renderClassEditor();
-  if (tab === 'settings') { renderPasswords(); loadWASettings(); }
+function removeQRIS() {
+  qrisData = null;
+  save('tutory_qris', null);
+  document.getElementById('qris-placeholder').style.display = 'block';
+  const img = document.getElementById('qris-img');
+  img.src = ''; img.style.display = 'none';
+  document.getElementById('qris-admin-preview').style.display = 'none';
 }
-
-// REGISTRATIONS TABLE
-async function renderAdminTable() {
-  const tbody = document.getElementById('reg-tbody');
-  const count = document.getElementById('reg-count');
-  tbody.innerHTML = '<tr><td colspan="14" class="no-data">Loading...</td></tr>';
-  count.textContent = 'Loading...';
-
-  const { data, error } = await db.from('registrations').select('*').order('created_at', { ascending: false });
-
-  if (error) {
-    tbody.innerHTML = `<tr><td colspan="14" class="no-data" style="color:var(--red)">Error: ${error.message}</td></tr>`;
-    count.textContent = 'Error loading data';
-    return;
-  }
-
-  count.textContent = (data.length) + ' registration(s)';
-  window._supabaseData = data;
-
-  if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="14" class="no-data">No registrations yet</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = data.map((r,i) => `
-    <tr>
-      <td>${i+1}</td>
-      <td style="white-space:nowrap">${new Date(r.created_at).toLocaleString('id-ID')}</td>
-      <td><strong>${r.fullname||''}</strong>${r.nickname ? '<br><span style="color:var(--gray);font-size:.75rem;">'+r.nickname+'</span>' : ''}</td>
-      <td>${r.phone||''}</td>
-      <td>${r.email||''}</td>
-      <td>${r.class_name||''}<br><span style="color:var(--gray);font-size:.75rem">${r.class_hours||''}</span></td>
-      <td style="white-space:nowrap;color:var(--blue);font-weight:700">IDR ${fmt(r.amount_paid||0)}</td>
-      <td>${r.current_band||''}</td>
-      <td>${r.target_band||''}</td>
-      <td>${r.occupation||''}</td>
-      <td>${r.purpose||''}</td>
-      <td>${r.source||'–'}</td>
-      <td style="font-family:monospace;font-size:.75rem">${r.member_code||'–'}</td>
-      <td>${r.notes||'–'}</td>
-    </tr>`).join('');
-}
-
-// CLASS EDITOR
-function renderClassEditor() {
-  const container = document.getElementById('class-editor-rows');
-  container.innerHTML = classes.map((c, i) => {
-    const hasMember = c.memberPrice !== null && c.memberPrice !== undefined;
-    return `
-    <div class="class-editor-row" id="cer-${i}" style="position:relative;flex-wrap:wrap;gap:10px;">
-      <!-- Delete button -->
-      <button onclick="deleteClass(${i})" title="Delete class" style="position:absolute;top:8px;right:8px;background:none;border:none;color:#ccc;font-size:1.1rem;cursor:pointer;line-height:1;padding:0;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='#ccc'">✕</button>
-
-      <!-- Col 1: Name, hours, type, active -->
-      <div style="min-width:160px;flex:2;">
-        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-          <input type="text" value="${c.name}" id="ce-name-${i}" placeholder="Class name" style="flex:1;min-width:120px;">
-        </div>
-        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-          <input type="text" value="${c.hours}" id="ce-hours-${i}" placeholder="e.g. 10 Hours" style="flex:1;min-width:80px;">
-          <select id="ce-type-${i}" style="flex:1;min-width:90px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:.85rem;">
-            <option value="private" ${c.type==='private'?'selected':''}>Private</option>
-            <option value="semiprivate" ${c.type==='semiprivate'?'selected':''}>Semi Private</option>
-            <option value="group" ${c.type==='group'?'selected':''}>Group</option>
-            <option value="scholarship" ${c.type==='scholarship'?'selected':''}>Scholarship</option>
-            <option value="scholarship_nc" ${c.type==='scholarship_nc'?'selected':''}>Scholarship NC</option>
-            <option value="idp" ${c.type==='idp'?'selected':''}>IDP Package</option>
-          </select>
-        </div>
-        <div class="toggle-wrap">
-          <label class="toggle"><input type="checkbox" id="ce-active-${i}" ${c.active?'checked':''}><span class="toggle-slider"></span></label>
-          <span style="font-size:.78rem;color:var(--gray);">Active</span>
-        </div>
-      </div>
-
-      <!-- Col 2: Normal price -->
-      <div style="min-width:110px;flex:1;">
-        <div style="font-size:.72rem;color:var(--gray);margin-bottom:4px;">Normal Price</div>
-        <input type="number" value="${c.normalPrice}" id="ce-normal-${i}" placeholder="Normal price">
-      </div>
-
-      <!-- Col 3: Promo price -->
-      <div style="min-width:110px;flex:1;">
-        <div style="font-size:.72rem;color:var(--gray);margin-bottom:4px;">Promo Price</div>
-        <input type="number" value="${c.price}" id="ce-promo-${i}" placeholder="Promo price">
-      </div>
-
-      <!-- Col 4: Member price (toggleable) -->
-      <div style="min-width:130px;flex:1;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-          <label class="toggle" style="transform:scale(.85);transform-origin:left center;">
-            <input type="checkbox" id="ce-hasm-${i}" ${hasMember?'checked':''} onchange="toggleMemberPrice(${i})">
-            <span class="toggle-slider"></span>
-          </label>
-          <span style="font-size:.72rem;color:var(--gray);">Member Price</span>
-        </div>
-        <input type="number" value="${hasMember?c.memberPrice:''}" id="ce-member-${i}" placeholder="Member price" ${!hasMember?'disabled style="opacity:.4"':''}>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleMemberPrice(i) {
-  const on = document.getElementById('ce-hasm-'+i).checked;
-  const inp = document.getElementById('ce-member-'+i);
-  inp.disabled = !on;
-  inp.style.opacity = on ? '1' : '0.4';
-  if (!on) inp.value = '';
-}
-
-function toggleClassActive(i) {
-  classes[i].active = document.getElementById('ce-active-'+i).checked;
-}
-
-function deleteClass(i) {
-  if (!confirm('Delete "' + classes[i].name + '"? This cannot be undone.')) return;
-  classes.splice(i, 1);
-  save('tutory_classes', classes);
-  renderClassCards();
-  renderClassEditor();
-}
-
-function addNewClass() {
-  const newKey = 'class_' + Date.now();
-  classes.push({ key: newKey, name: 'New Class', hours: '10 Hours', normalPrice: 0, price: 0, type: 'group', memberPrice: null, active: false });
-  renderClassEditor();
-  // scroll to new row
-  const rows = document.getElementById('class-editor-rows');
-  rows.lastElementChild && rows.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-async function saveClassEdits() {
-  classes.forEach((c, i) => {
-    c.name        = document.getElementById('ce-name-'+i).value.trim() || c.name;
-    c.hours       = document.getElementById('ce-hours-'+i).value.trim() || c.hours;
-    c.type        = document.getElementById('ce-type-'+i).value;
-    c.normalPrice = parseInt(document.getElementById('ce-normal-'+i).value) || c.normalPrice;
-    c.price       = parseInt(document.getElementById('ce-promo-'+i).value) || c.price;
-    c.active      = document.getElementById('ce-active-'+i).checked;
-    const hasMember = document.getElementById('ce-hasm-'+i).checked;
-    if (hasMember) {
-      const mp = parseInt(document.getElementById('ce-member-'+i).value);
-      c.memberPrice = mp || c.memberPrice;
-    } else {
-      c.memberPrice = null;
-    }
-  });
-  save('tutory_classes', classes);       // cache lokal
-  await saveClassesToSupabase();         // simpan ke Supabase (sync semua device)
-  renderClassCards();
-  const msg = document.getElementById('class-save-msg');
-  msg.style.display = 'block';
-  setTimeout(() => msg.style.display='none', 3000);
-}
-
-// MEMBER CODES
-function renderCodes() {
-  const grid = document.getElementById('codes-grid');
-  grid.innerHTML = memberCodes.map(code => {
-    const isUsed = usedCodes.includes(code);
-    return `<div class="member-code-chip ${isUsed?'used':''}">${code}${isUsed?'<br><span style="font-size:.65rem">USED</span>':''}</div>`;
-  }).join('');
-}
-
-function addMemberCode() {
-  const input = document.getElementById('new-code-input');
-  const val = input.value.trim().toUpperCase();
-  const msg = document.getElementById('new-code-msg');
-  if (!val) { msg.textContent='Please enter a code.'; msg.style.color='var(--red)'; return; }
-  if (memberCodes.includes(val)) { msg.textContent='Code already exists.'; msg.style.color='var(--red)'; return; }
-  memberCodes.push(val);
-  save('tutory_member_codes', memberCodes);
-  input.value = '';
-  msg.textContent = '✅ Code added: ' + val;
-  msg.style.color = 'var(--green)';
-  renderCodes();
-}
-
-// PASSWORDS
-function renderPasswords() {
-  const list = document.getElementById('password-list');
-  list.innerHTML = adminPasswords.map((pw, i) => `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-      <input type="text" value="${pw}" readonly style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:.85rem;background:var(--gray-light);">
-      ${adminPasswords.length > 1 ? `<button onclick="removePassword(${i})" style="background:var(--red);color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:.8rem;">✕</button>` : ''}
-    </div>`).join('');
-}
-
-function addAdminPassword() {
-  const val = document.getElementById('new-pw-input').value.trim();
-  const msg = document.getElementById('pw-msg');
-  if (!val) { msg.textContent='Please enter a password.'; msg.style.color='var(--red)'; return; }
-  if (adminPasswords.includes(val)) { msg.textContent='Password already exists.'; msg.style.color='var(--red)'; return; }
-  adminPasswords.push(val);
-  save('tutory_passwords', adminPasswords);
-  document.getElementById('new-pw-input').value='';
-  msg.textContent='✅ Password added.'; msg.style.color='var(--green)';
-  renderPasswords();
-}
-
-function removePassword(i) {
-  if (adminPasswords.length <= 1) return;
-  adminPasswords.splice(i, 1);
-  save('tutory_passwords', adminPasswords);
-  renderPasswords();
-}
-
-function loadWASettings() {
-  const el = document.getElementById('wa-number-input');
-  if (el) el.value = waNumber;
-}
-
-function saveSettings() {
-  const waEl = document.getElementById('wa-number-input');
-  if (waEl && waEl.value.trim()) {
-    waNumber = waEl.value.trim();
-    save('tutory_wa', waNumber);
-  }
-  const msg = document.getElementById('settings-save-msg');
-  msg.style.display='block';
-  setTimeout(() => msg.style.display='none', 3000);
-}
-
-// EXPORT CSV
-async function exportCSV() {
-  const { data, error } = await db.from('registrations').select('*').order('created_at', { ascending: false });
-  if (error) { alert('Gagal mengambil data: ' + error.message); return; }
-  if (!data || data.length === 0) { alert('No registrations to export.'); return; }
-
-  const headers = ['#','Date','Full Name','Nickname','DOB','Gender','Email','Phone','Instagram','Occupation','Purpose','Target Band','Source','Current Level','Weak Skill','Class','Hours','Amount (IDR)','Member Code','Notes'];
-  const rows = data.map((r,i) => [
-    i+1,
-    new Date(r.created_at).toLocaleString('id-ID'),
-    r.fullname, r.nickname, r.dob, r.gender,
-    r.email, r.phone, r.instagram, r.occupation, r.purpose,
-    r.target_band, r.source, r.current_band, r.weak_skill,
-    r.class_name, r.class_hours, r.amount_paid, r.member_code, r.notes
-  ].map(v => '"'+String(v||'').replace(/"/g,'""')+'"').join(','));
-
-  const csv = [headers.join(','), ...rows].join('\n');
-  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download='tutory_registrations_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click(); URL.revokeObjectURL(url);
-}
-
-async function exportXLSX() {
-  const { data, error } = await db.from('registrations').select('*').order('created_at', { ascending: false });
-  if (error) { alert('Gagal mengambil data: ' + error.message); return; }
-  if (!data || data.length === 0) { alert('No registrations to export.'); return; }
-
-  const headers = ['#','Date','Full Name','Nickname','DOB','Gender','Email','Phone','Instagram','Occupation','Purpose','Target Band','Source','Current Level','Weak Skill','Class','Hours','Amount (IDR)','Member Code','Notes'];
-  const rows = data.map((r,i) => [
-    i+1,
-    new Date(r.created_at).toLocaleString('id-ID'),
-    r.fullname, r.nickname, r.dob, r.gender,
-    r.email, r.phone, r.instagram, r.occupation, r.purpose,
-    r.target_band, r.source, r.current_band, r.weak_skill,
-    r.class_name, r.class_hours, r.amount_paid, r.member_code, r.notes
-  ]);
-
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws['!cols'] = headers.map(() => ({ wch: 18 }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Registrations');
-  XLSX.writeFile(wb, 'tutory_registrations_'+new Date().toISOString().slice(0,10)+'.xlsx');
-}
-
-function clearAllData() {
-  if (!confirm('DELETE all registration data? This cannot be undone.')) return;
-  registrations = [];
-  save('tutory_registrations', registrations);
-  renderAdminTable();
-}
-
-// RESET FORM
-function resetForm() {
-  document.querySelectorAll('input:not([type=radio]):not([type=file]):not([type=checkbox])').forEach(i => i.value='');
-  document.querySelectorAll('select').forEach(s => s.selectedIndex=0);
-  document.querySelectorAll('textarea').forEach(t => t.value='');
-  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('upload-preview').style.display='none';
-  document.getElementById('f-occupation-other').style.display='none';
-  document.getElementById('f-purpose-other').style.display='none';
-  selectedClass=null; memberCodeApplied=false; appliedCode=null;
-  goStep(1);
-}
-
 
 // ============================================================
 // MODE SELECTOR & PRE TEST REGISTRATION
